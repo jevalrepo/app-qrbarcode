@@ -1,18 +1,19 @@
 import React from 'react';
 import {
-  View, Text, TouchableOpacity, FlatList, Alert, useColorScheme, ActivityIndicator,
+  View, Text, TouchableOpacity, FlatList, Alert, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHistory, HistoryItem } from '@/hooks/useHistory';
-import { useT, useAccent } from '@/context/SettingsContext';
+import { useT, useAccent, useThemeScheme } from '@/context/SettingsContext';
 import ScanResultCard from '@/components/ScanResultCard';
+import BannerAdView from '@/components/BannerAdView';
 
 export default function HistoryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const scheme = useColorScheme();
+  const scheme = useThemeScheme();
   const isDark = scheme === 'dark';
   const { history, loading, clearHistory } = useHistory();
   const t = useT();
@@ -79,6 +80,7 @@ export default function HistoryScreen() {
           )}
         />
       )}
+      <BannerAdView />
     </View>
   );
 }

@@ -1,16 +1,17 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, useColorScheme } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHistory } from '@/hooks/useHistory';
-import { useT, useAccent } from '@/context/SettingsContext';
+import { useT, useAccent, useThemeScheme } from '@/context/SettingsContext';
 import ScanResultCard from '@/components/ScanResultCard';
+import BannerAdView from '@/components/BannerAdView';
 
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const scheme = useColorScheme();
+  const scheme = useThemeScheme();
   const isDark = scheme === 'dark';
   const { history } = useHistory();
   const t = useT();
@@ -25,6 +26,7 @@ export default function HomeScreen() {
   const recents = history.slice(0, 3);
 
   return (
+    <View style={{ flex: 1, backgroundColor: bg }}>
     <ScrollView
       style={{ flex: 1, backgroundColor: bg }}
       contentContainerStyle={{ paddingTop: insets.top + 22, paddingBottom: 24 }}
@@ -42,10 +44,9 @@ export default function HomeScreen() {
             <View className="w-12 h-12 rounded-2xl items-center justify-center bg-white/20">
               <Ionicons name="scan" size={26} color="white" />
             </View>
-            <View className="flex-1">
-              <Text className="text-white font-medium text-lg">{h.scanBtn}</Text>
-              <Text className="text-white/70 text-sm mt-0.5">{h.subtitle}</Text>
-            </View>
+          <View className="flex-1">
+            <Text className="text-white font-medium text-lg">{h.scanBtn}</Text>
+          </View>
             <Ionicons name="arrow-forward" size={20} color="white" />
           </View>
         </TouchableOpacity>
@@ -126,5 +127,7 @@ export default function HomeScreen() {
         )}
       </View>
     </ScrollView>
+    <BannerAdView />
+    </View>
   );
 }

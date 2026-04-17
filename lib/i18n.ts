@@ -3,7 +3,6 @@ export type Language = 'es' | 'en';
 const es = {
   tabs: { home: 'Inicio', history: 'Historial', generate: 'Generar', settings: 'Ajustes' },
   home: {
-    subtitle: 'Sin anuncios. Sin ruido.',
     scanBtn: 'Escanear código',
     scanSub: 'QR, EAN, Code128 y más',
     generateQR: 'Generar QR',
@@ -74,6 +73,8 @@ const es = {
       phone: '+52 55 1234 5678', password: 'Contraseña de la red',
     },
     generateBtn: 'Generar QR',
+    pasteFromClipboard: 'Portapapeles',
+    clipboardEmpty: 'El portapapeles está vacío',
     previewTitle: 'Vista previa',
     previewEmpty: 'Completa el contenido y genera tu código.',
     contentTitle: 'Contenido',
@@ -105,14 +106,12 @@ const es = {
     autoOpenDesc: 'Al escanear una URL se abre el navegador de inmediato',
     about: 'Acerca de',
     version: 'Versión',
-    slogan: 'Sin anuncios. Sin ruido.',
   },
 };
 
 const en: typeof es = {
   tabs: { home: 'Home', history: 'History', generate: 'Generate', settings: 'Settings' },
   home: {
-    subtitle: 'No ads. No noise.',
     scanBtn: 'Scan code',
     scanSub: 'QR, EAN, Code128 and more',
     generateQR: 'Generate QR',
@@ -183,6 +182,8 @@ const en: typeof es = {
       phone: '+1 555 123 4567', password: 'Network password',
     },
     generateBtn: 'Generate QR',
+    pasteFromClipboard: 'Clipboard',
+    clipboardEmpty: 'Clipboard is empty',
     previewTitle: 'Preview',
     previewEmpty: 'Fill in the content and generate your code.',
     contentTitle: 'Content',
@@ -214,7 +215,6 @@ const en: typeof es = {
     autoOpenDesc: 'When scanning a URL, the browser opens immediately',
     about: 'About',
     version: 'Version',
-    slogan: 'No ads. No noise.',
   },
 };
 

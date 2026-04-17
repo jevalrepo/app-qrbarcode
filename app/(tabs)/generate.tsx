@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import {
-  View, Text, TouchableOpacity, TextInput, ScrollView, useColorScheme, Alert, Platform, Modal,
+  View, Text, TouchableOpacity, TextInput, ScrollView, Alert, Platform, Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,7 +8,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import QRCode from 'react-native-qrcode-svg';
-import { useT, useAccent } from '@/context/SettingsContext';
+import { useT, useAccent, useThemeScheme } from '@/context/SettingsContext';
 
 type QRGenerateType = 'url' | 'text' | 'wifi' | 'email' | 'phone';
 
@@ -33,7 +33,7 @@ function buildQRData(type: QRGenerateType, value: string, wifiPass: string): str
 
 export default function GenerateScreen() {
   const insets = useSafeAreaInsets();
-  const scheme = useColorScheme();
+  const scheme = useThemeScheme();
   const isDark = scheme === 'dark';
   const t = useT();
   const g = t.generate;
@@ -96,6 +96,19 @@ export default function GenerateScreen() {
         Alert.alert('Error', g.imageCopyError);
       }
     });
+  }
+
+  async function handlePaste() {
+    const text = await Clipboard.getStringAsync();
+    if (!text) {
+      Alert.alert('', g.clipboardEmpty);
+      return;
+    }
+    setActiveType('text');
+    setValue(text);
+    setGenerated(text);
+    setPreviewVisible(true);
+    setImageCopied(false);
   }
 
   function handleTypeChange(type: QRGenerateType) {
@@ -179,6 +192,21 @@ export default function GenerateScreen() {
                 </TouchableOpacity>
               );
             })}
+            <TouchableOpacity
+              onPress={handlePaste}
+              className="rounded-2xl px-4 py-3"
+              style={{
+                backgroundColor: bgTertiary,
+                borderWidth: 0.5,
+                borderColor: border,
+                width: '48%',
+              }}
+            >
+              <Ionicons name="clipboard-outline" size={16} color={textSecondary} />
+              <Text className="text-sm font-medium mt-2" style={{ color: text }}>
+                {g.pasteFromClipboard}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <View
@@ -199,6 +227,7 @@ export default function GenerateScreen() {
               keyboardType={activeType === 'phone' ? 'phone-pad' : activeType === 'email' ? 'email-address' : 'default'}
             />
           </View>
+
 
           {activeType === 'wifi' && (
             <View

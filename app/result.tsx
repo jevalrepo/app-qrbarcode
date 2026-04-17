@@ -1,25 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, TouchableOpacity, ScrollView, Linking, useColorScheme, Alert,
+  View, Text, TouchableOpacity, ScrollView, Linking, Alert,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAppSettings, useT, useAccent } from '@/context/SettingsContext';
+import { useAppSettings, useT, useAccent, useThemeScheme } from '@/context/SettingsContext';
 import { QRType, getTypeLabel, getTypeIcon, getTypeColor, parseWifi } from '@/lib/detectType';
+import { useInterstitialAd } from '@/lib/useInterstitialAd';
 
 export default function ResultScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { data, type } = useLocalSearchParams<{ data: string; type: string }>();
-  const scheme = useColorScheme();
+  const scheme = useThemeScheme();
   const isDark = scheme === 'dark';
   const [copied, setCopied] = useState(false);
   const { settings } = useAppSettings();
   const t = useT();
   const r = t.result;
   const accent = useAccent();
+  useInterstitialAd();
 
   const qrType = (type as QRType) ?? 'text';
   const color = getTypeColor(qrType, accent);
@@ -32,7 +34,7 @@ export default function ResultScreen() {
     }
   }, []);
 
-  const bg = isDark ? '#0A0A0A' : '#FFFFFF';
+const bg = isDark ? '#0A0A0A' : '#FFFFFF';
   const bgSecondary = isDark ? '#141414' : '#F5F5F3';
   const border = isDark ? '#2A2A2A' : '#E8E8E6';
   const text = isDark ? '#F5F5F3' : '#0A0A0A';

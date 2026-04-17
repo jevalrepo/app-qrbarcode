@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
-import { useColorScheme, View } from 'react-native';
+import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useT, useAccent } from '@/context/SettingsContext';
+import { useT, useAccent, useThemeScheme } from '@/context/SettingsContext';
 
 type IoniconsName = keyof typeof Ionicons.glyphMap;
 
@@ -22,7 +22,7 @@ function TabIcon({
 }
 
 export default function TabLayout() {
-  const scheme = useColorScheme();
+  const scheme = useThemeScheme();
   const isDark = scheme === 'dark';
   const t = useT();
   const accent = useAccent();

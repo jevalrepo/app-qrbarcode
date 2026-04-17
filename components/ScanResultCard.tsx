@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, useColorScheme } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { HistoryItem } from '@/hooks/useHistory';
 import { getTypeLabel, getTypeIcon, getTypeColor } from '@/lib/detectType';
-import { useAccent } from '@/context/SettingsContext';
+import { useAccent, useThemeScheme } from '@/context/SettingsContext';
 
 interface Props {
   item: HistoryItem;
@@ -24,7 +24,7 @@ function timeAgo(ms: number): string {
 
 export default function ScanResultCard({ item, compact = false, showDivider = false }: Props) {
   const router = useRouter();
-  const scheme = useColorScheme();
+  const scheme = useThemeScheme();
   const isDark = scheme === 'dark';
   const accent = useAccent();
 

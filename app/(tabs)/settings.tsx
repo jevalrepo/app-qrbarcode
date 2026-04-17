@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, Switch, TouchableOpacity, ScrollView, useColorScheme } from 'react-native';
+import { View, Text, Switch, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAppSettings, useT, useAccent, ThemePreference } from '@/context/SettingsContext';
+import { useAppSettings, useT, useAccent, ThemePreference, useThemeScheme } from '@/context/SettingsContext';
 import { Language, LANGUAGE_LABELS } from '@/lib/i18n';
 import { ACCENT_COLORS } from '@/lib/accent';
 
@@ -26,7 +26,7 @@ function SectionLabel({ children }: { children: string }) {
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
-  const scheme = useColorScheme();
+  const scheme = useThemeScheme();
   const isDark = scheme === 'dark';
   const { settings, updateSettings } = useAppSettings();
   const t = useT();
@@ -189,8 +189,7 @@ export default function SettingsScreen() {
           </View>
           <View className="h-px mx-4" style={{ backgroundColor: border }} />
           <View className="flex-row items-center justify-between px-4 py-4">
-            <Text className="text-sm" style={{ color: text }}>{s.slogan}</Text>
-            <Text className="text-sm font-medium" style={{ color: accent }}>QR & Barcode Scanner</Text>
+            <Text className="text-sm" style={{ color: text }}>QR & Barcode Scanner</Text>
           </View>
         </View>
       </View>
