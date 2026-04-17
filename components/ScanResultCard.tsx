@@ -10,6 +10,7 @@ interface Props {
   item: HistoryItem;
   compact?: boolean;
   showDivider?: boolean;
+  onToggleFavorite?: (id: string) => void;
 }
 
 function timeAgo(ms: number): string {
@@ -22,7 +23,7 @@ function timeAgo(ms: number): string {
   return `${Math.floor(hrs / 24)}d`;
 }
 
-export default function ScanResultCard({ item, compact = false, showDivider = false }: Props) {
+export default function ScanResultCard({ item, compact = false, showDivider = false, onToggleFavorite }: Props) {
   const router = useRouter();
   const scheme = useThemeScheme();
   const isDark = scheme === 'dark';
@@ -60,12 +61,26 @@ export default function ScanResultCard({ item, compact = false, showDivider = fa
           </View>
         </View>
 
-        <Ionicons
-          name="chevron-forward"
-          size={16}
-          color={isDark ? '#2A2A2A' : '#EBEBEA'}
-          style={{ marginLeft: 8 }}
-        />
+        {onToggleFavorite ? (
+          <TouchableOpacity
+            onPress={(e) => { e.stopPropagation(); onToggleFavorite(item.id); }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={{ marginLeft: 8 }}
+          >
+            <Ionicons
+              name={item.favorite ? 'star' : 'star-outline'}
+              size={16}
+              color={item.favorite ? '#EF9F27' : isDark ? '#2A2A2A' : '#EBEBEA'}
+            />
+          </TouchableOpacity>
+        ) : (
+          <Ionicons
+            name="chevron-forward"
+            size={16}
+            color={isDark ? '#2A2A2A' : '#EBEBEA'}
+            style={{ marginLeft: 8 }}
+          />
+        )}
       </TouchableOpacity>
 
       {showDivider && (

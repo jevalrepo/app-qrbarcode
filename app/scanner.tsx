@@ -7,15 +7,17 @@ import {
   Animated,
   Platform,
   PanResponder,
+  Alert,
 } from 'react-native';
 import { CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHistory } from '@/hooks/useHistory';
 import { detectType } from '@/lib/detectType';
-import { useT, useAccent } from '@/context/SettingsContext';
+import { useT, useAccent, useAppSettings } from '@/context/SettingsContext';
 
 const { width } = Dimensions.get('window');
 const FRAME_SIZE = width * 0.68;
@@ -31,6 +33,7 @@ export default function ScannerScreen() {
   const [scanned, setScanned] = useState(false);
   const [cameraZoom, setCameraZoom] = useState(0);
   const { addToHistory } = useHistory();
+  const { settings } = useAppSettings();
   const t = useT();
   const s = t.scanner;
   const accent = useAccent();
@@ -59,10 +62,10 @@ export default function ScannerScreen() {
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: (_, gestureState) => gestureState.numberActiveTouches >= 2,
-      onStartShouldSetPanResponderCapture: (_, gestureState) => gestureState.numberActiveTouches >= 2,
-      onMoveShouldSetPanResponder: (_, gestureState) => gestureState.numberActiveTouches >= 2,
-      onMoveShouldSetPanResponderCapture: (_, gestureState) => gestureState.numberActiveTouches >= 2,
+      onStartShouldSetPanResponder: (_, gs) => gs.numberActiveTouches >= 2,
+      onStartShouldSetPanResponderCapture: (_, gs) => gs.numberActiveTouches >= 2,
+      onMoveShouldSetPanResponder: (_, gs) => gs.numberActiveTouches >= 2,
+      onMoveShouldSetPanResponderCapture: (_, gs) => gs.numberActiveTouches >= 2,
       onPanResponderGrant: (evt) => {
         const distance = getPinchDistance(evt.nativeEvent.touches);
         if (distance === null) return;
@@ -72,7 +75,6 @@ export default function ScannerScreen() {
       onPanResponderMove: (evt) => {
         const distance = getPinchDistance(evt.nativeEvent.touches);
         if (distance === null || pinchStartDistanceRef.current === null) return;
-
         const delta = (distance - pinchStartDistanceRef.current) / 240;
         setZoom(startZoomRef.current + delta);
       },
@@ -101,7 +103,9 @@ export default function ScannerScreen() {
       if (scanned) return;
       setScanned(true);
 
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (settings.haptics) {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
 
       Animated.sequence([
         Animated.timing(frameScale, { toValue: 1.06, duration: 100, useNativeDriver: true }),
@@ -114,8 +118,22 @@ export default function ScannerScreen() {
 
       router.replace({ pathname: '/result', params: { data, type } });
     },
-    [scanned, frameScale, addToHistory, router],
+    [scanned, frameScale, addToHistory, router, settings.haptics],
   );
+
+  async function handleGallery() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('', s.galleryPermissionError);
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 1,
+    });
+    if (result.canceled) return;
+    Alert.alert('', s.galleryError);
+  }
 
   if (!permission) return <View className="flex-1 bg-black" />;
 
@@ -223,7 +241,7 @@ export default function ScannerScreen() {
         </TouchableOpacity>
         <Text className="text-white font-medium text-base">{s.title}</Text>
         <TouchableOpacity
-          onPress={() => setTorch((t) => !t)}
+          onPress={() => setTorch((v) => !v)}
           className="w-10 h-10 rounded-full items-center justify-center"
           style={{ backgroundColor: torch ? accent : 'rgba(0,0,0,0.4)' }}
         >
@@ -241,15 +259,25 @@ export default function ScannerScreen() {
         </View>
       )}
 
-      {/* hint */}
+      {/* bottom */}
       <View className="absolute bottom-0 left-0 right-0 items-center pb-16">
-        <Text className="text-white/60 text-sm">
+        <Text className="text-white/60 text-sm mb-4">
           {showZoomLabel ? s.hintZoom : s.hint}
         </Text>
+
+        <TouchableOpacity
+          onPress={handleGallery}
+          className="w-12 h-12 rounded-full items-center justify-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+        >
+          <Ionicons name="images-outline" size={22} color="white" />
+        </TouchableOpacity>
+
         {scanned && (
           <TouchableOpacity
             onPress={() => setScanned(false)}
-            className="mt-4 bg-accent px-6 py-3 rounded-2xl"
+            className="mt-4 px-6 py-3 rounded-2xl"
+            style={{ backgroundColor: accent }}
           >
             <Text className="text-white font-medium">{s.scanAgain}</Text>
           </TouchableOpacity>

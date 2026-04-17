@@ -46,6 +46,37 @@ export default function SettingsScreen() {
       contentContainerStyle={{ paddingTop: insets.top + 22, paddingBottom: 40 }}
       showsVerticalScrollIndicator={false}
     >
+      {/* ── PRO ── */}
+      <View className="px-5 mb-6">
+        <View
+          className="rounded-2xl overflow-hidden"
+          style={{ backgroundColor: accent }}
+        >
+          <TouchableOpacity activeOpacity={0.85} className="px-4 py-4">
+            <View className="flex-row items-center justify-between">
+              <View>
+                <View className="flex-row items-center gap-1.5 mb-1">
+                  <Ionicons name="star" size={12} color="white" />
+                  <Text className="text-xs font-bold text-white">{t.pro.badge}</Text>
+                </View>
+                <Text className="text-sm font-semibold text-white">{t.pro.title}</Text>
+                <Text className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.6)' }}>{t.pro.description}</Text>
+              </View>
+              <View className="items-end gap-2">
+                <Text className="text-lg font-bold text-white">{t.pro.price}</Text>
+                <View className="bg-white/20 rounded-xl px-3 py-1.5">
+                  <Text className="text-xs font-semibold text-white">{t.pro.cta}</Text>
+                </View>
+              </View>
+            </View>
+          </TouchableOpacity>
+          <View style={{ height: 0.5, backgroundColor: 'rgba(255,255,255,0.15)' }} />
+          <TouchableOpacity activeOpacity={0.7} className="items-center py-2.5">
+            <Text className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>{t.pro.restore}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
       {/* ── APARIENCIA ── */}
       <View className="px-5 mb-6">
         <SectionLabel>{s.appearance}</SectionLabel>
@@ -169,6 +200,19 @@ export default function SettingsScreen() {
             <Switch
               value={settings.autoOpenUrls}
               onValueChange={(val) => updateSettings({ autoOpenUrls: val })}
+              trackColor={{ false: isDark ? '#2A2A2A' : '#EBEBEA', true: accent }}
+              thumbColor="white"
+            />
+          </View>
+          <View className="h-px mx-4" style={{ backgroundColor: border }} />
+          <View className="flex-row items-center px-4 py-4">
+            <View className="flex-1 mr-4">
+              <Text className="text-sm font-medium" style={{ color: text }}>{s.haptics}</Text>
+              <Text className="text-xs mt-0.5" style={{ color: textSecondary }}>{s.hapticsDesc}</Text>
+            </View>
+            <Switch
+              value={settings.haptics}
+              onValueChange={(val) => updateSettings({ haptics: val })}
               trackColor={{ false: isDark ? '#2A2A2A' : '#EBEBEA', true: accent }}
               thumbColor="white"
             />

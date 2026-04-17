@@ -48,6 +48,18 @@
           "androidAppId": "ca-app-pub-3940256099942544~3347511713",
           "iosAppId": ""
         }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "QR & Barcode Scanner necesita acceso a tus contactos para guardar información de vCard."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "QR & Barcode Scanner necesita acceso a tus fotos para escanear códigos QR desde la galería."
+        }
       ]
     ],
     "experiments": {

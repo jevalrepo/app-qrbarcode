@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, TouchableOpacity, ScrollView, Linking, Alert,
+  View, Text, TouchableOpacity, ScrollView, Linking, Alert, Share,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
+import * as Contacts from 'expo-contacts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppSettings, useT, useAccent, useThemeScheme } from '@/context/SettingsContext';
 import { QRType, getTypeLabel, getTypeIcon, getTypeColor, parseWifi } from '@/lib/detectType';
@@ -21,6 +22,7 @@ export default function ResultScreen() {
   const t = useT();
   const r = t.result;
   const accent = useAccent();
+
   useInterstitialAd();
 
   const qrType = (type as QRType) ?? 'text';
@@ -34,7 +36,7 @@ export default function ResultScreen() {
     }
   }, []);
 
-const bg = isDark ? '#0A0A0A' : '#FFFFFF';
+  const bg = isDark ? '#0A0A0A' : '#FFFFFF';
   const bgSecondary = isDark ? '#141414' : '#F5F5F3';
   const border = isDark ? '#2A2A2A' : '#E8E8E6';
   const text = isDark ? '#F5F5F3' : '#0A0A0A';
@@ -44,6 +46,42 @@ const bg = isDark ? '#0A0A0A' : '#FFFFFF';
     await Clipboard.setStringAsync(data ?? '');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleShare() {
+    try {
+      await Share.share({ message: data ?? '' });
+    } catch {}
+  }
+
+  async function handleAddContact() {
+    if (!data) return;
+    const { status } = await Contacts.requestPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('', r.contactError);
+      return;
+    }
+    try {
+      const name = data.match(/FN:([^\r\n]+)/i)?.[1]?.trim() ?? '';
+      const phone = data.match(/TEL[^:]*:([^\r\n]+)/i)?.[1]?.trim();
+      const email = data.match(/EMAIL[^:]*:([^\r\n]+)/i)?.[1]?.trim();
+      const org = data.match(/ORG:([^\r\n]+)/i)?.[1]?.trim();
+
+      const contact: Contacts.Contact = {
+        contactType: Contacts.ContactTypes.Person,
+        name,
+        firstName: name.split(' ')[0] ?? name,
+        lastName: name.split(' ').slice(1).join(' ') || undefined,
+        phoneNumbers: phone ? [{ label: 'mobile', number: phone }] : undefined,
+        emails: email ? [{ label: 'work', email }] : undefined,
+        company: org,
+      };
+
+      await Contacts.addContactAsync(contact);
+      Alert.alert('', r.contactSaved);
+    } catch {
+      Alert.alert('', r.contactError);
+    }
   }
 
   async function handleSmartAction() {
@@ -76,6 +114,12 @@ const bg = isDark ? '#0A0A0A' : '#FFFFFF';
       case 'sms':
         await Linking.openURL(`sms:${data.replace(/^smsto?:/i, '').split(':')[0]}`);
         break;
+      case 'vcard':
+        await handleAddContact();
+        break;
+      case 'product':
+        await Linking.openURL(`https://www.google.com/search?q=${encodeURIComponent(data)}`);
+        break;
       default:
         handleCopy();
     }
@@ -89,6 +133,8 @@ const bg = isDark ? '#0A0A0A' : '#FFFFFF';
       case 'wifi': return r.seePassword;
       case 'geo': return r.openMaps;
       case 'sms': return r.sendSMS;
+      case 'vcard': return r.addContact;
+      case 'product': return r.searchProduct;
       default: return r.copy;
     }
   }
@@ -101,6 +147,8 @@ const bg = isDark ? '#0A0A0A' : '#FFFFFF';
       case 'wifi': return 'wifi-outline';
       case 'geo': return 'map-outline';
       case 'sms': return 'chatbubble-outline';
+      case 'vcard': return 'person-add-outline';
+      case 'product': return 'search-outline';
       default: return 'copy-outline';
     }
   }
@@ -181,6 +229,16 @@ const bg = isDark ? '#0A0A0A' : '#FFFFFF';
           <Text className="font-medium text-base" style={{ color: copied ? '#00C896' : textSecondary }}>
             {copied ? r.copied : r.copy}
           </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={handleShare}
+          className="rounded-2xl py-4 flex-row items-center justify-center gap-2 mb-3"
+          style={{ backgroundColor: bgSecondary, borderWidth: 0.5, borderColor: border }}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="share-outline" size={18} color={textSecondary} />
+          <Text className="font-medium text-base" style={{ color: textSecondary }}>{r.share}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity

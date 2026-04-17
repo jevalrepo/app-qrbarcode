@@ -9,6 +9,7 @@ export type ThemePreference = 'light' | 'dark' | 'auto';
 export interface Settings {
   theme: ThemePreference;
   autoOpenUrls: boolean;
+  haptics: boolean;
   language: Language;
   accentColor: string;
 }
@@ -16,6 +17,7 @@ export interface Settings {
 const DEFAULT: Settings = {
   theme: 'auto',
   autoOpenUrls: false,
+  haptics: true,
   language: 'es',
   accentColor: DEFAULT_ACCENT,
 };

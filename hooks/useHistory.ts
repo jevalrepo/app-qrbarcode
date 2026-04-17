@@ -11,6 +11,7 @@ export interface HistoryItem {
   data: string;
   type: QRType;
   scannedAt: number;
+  favorite?: boolean;
 }
 
 export function useHistory() {
@@ -33,9 +34,15 @@ export function useHistory() {
   const addToHistory = useCallback(
     async (item: Omit<HistoryItem, 'id' | 'scannedAt'>) => {
       setHistory((prev) => {
+        const existing = prev.find((h) => h.data === item.data);
         const withoutDupe = prev.filter((h) => h.data !== item.data);
         const next: HistoryItem[] = [
-          { ...item, id: Date.now().toString(), scannedAt: Date.now() },
+          {
+            ...item,
+            id: Date.now().toString(),
+            scannedAt: Date.now(),
+            favorite: existing?.favorite ?? false,
+          },
           ...withoutDupe,
         ].slice(0, MAX_ITEMS);
         AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
@@ -45,20 +52,32 @@ export function useHistory() {
     [],
   );
 
-  const removeFromHistory = useCallback(
-    async (id: string) => {
-      setHistory((prev) => {
-        const next = prev.filter((h) => h.id !== id);
-        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-        return next;
-      });
-    },
-    [],
-  );
+  const removeFromHistory = useCallback(async (id: string) => {
+    setHistory((prev) => {
+      const next = prev.filter((h) => h.id !== id);
+      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
 
+  const toggleFavorite = useCallback(async (id: string) => {
+    setHistory((prev) => {
+      const next = prev.map((h) =>
+        h.id === id ? { ...h, favorite: !h.favorite } : h,
+      );
+      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  // clearHistory preserves favorites
   const clearHistory = useCallback(async () => {
-    await persist([]);
-  }, [persist]);
+    setHistory((prev) => {
+      const kept = prev.filter((h) => h.favorite);
+      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(kept));
+      return kept;
+    });
+  }, []);
 
-  return { history, loading, addToHistory, removeFromHistory, clearHistory };
+  return { history, loading, addToHistory, removeFromHistory, toggleFavorite, clearHistory };
 }
