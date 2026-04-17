@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Switch, TouchableOpacity, ScrollView } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppSettings, useT, useAccent, ThemePreference, useThemeScheme } from '@/context/SettingsContext';
@@ -25,6 +26,7 @@ function SectionLabel({ children }: { children: string }) {
 }
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const scheme = useThemeScheme();
   const isDark = scheme === 'dark';
@@ -235,6 +237,15 @@ export default function SettingsScreen() {
           <View className="flex-row items-center justify-between px-4 py-4">
             <Text className="text-sm" style={{ color: text }}>QR & Barcode Scanner</Text>
           </View>
+          <View className="h-px mx-4" style={{ backgroundColor: border }} />
+          <TouchableOpacity
+            onPress={() => router.push('/privacy')}
+            className="flex-row items-center justify-between px-4 py-4"
+            activeOpacity={0.7}
+          >
+            <Text className="text-sm" style={{ color: text }}>{s.privacy}</Text>
+            <Ionicons name="chevron-forward" size={16} color={textSecondary} />
+          </TouchableOpacity>
         </View>
       </View>
     </ScrollView>

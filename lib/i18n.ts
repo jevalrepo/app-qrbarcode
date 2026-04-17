@@ -127,6 +127,7 @@ const es = {
     hapticsDesc: 'Activa la vibración cuando detectas un código',
     about: 'Acerca de',
     version: 'Versión',
+    privacy: 'Política de privacidad',
   },
   pro: {
     badge: 'PRO',
@@ -138,6 +139,10 @@ const es = {
     feature1: 'Sin anuncios nunca más',
     feature2: 'Experiencia más rápida y limpia',
     feature3: 'Acceso de por vida con un solo pago',
+  },
+  help: {
+    title: 'Manual de usuario',
+    close: 'Cerrar',
   },
 };
 
@@ -268,6 +273,7 @@ const en: typeof es = {
     hapticsDesc: 'Vibrate when a code is detected',
     about: 'About',
     version: 'Version',
+    privacy: 'Privacy Policy',
   },
   pro: {
     badge: 'PRO',
@@ -279,6 +285,10 @@ const en: typeof es = {
     feature1: 'No ads, ever',
     feature2: 'Faster and cleaner experience',
     feature3: 'Lifetime access with a single payment',
+  },
+  help: {
+    title: 'User Manual',
+    close: 'Close',
   },
 };
 

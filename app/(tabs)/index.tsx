@@ -32,6 +32,21 @@ export default function HomeScreen() {
       contentContainerStyle={{ paddingTop: insets.top + 22, paddingBottom: 24 }}
       showsVerticalScrollIndicator={false}
     >
+      {/* help button */}
+      <View className="px-5 mb-4 flex-row justify-end">
+        <TouchableOpacity
+          onPress={() => router.push('/help')}
+          style={{
+            width: 36, height: 36, borderRadius: 18,
+            backgroundColor: isDark ? '#1E1E1E' : '#EBEBEA',
+            alignItems: 'center', justifyContent: 'center',
+          }}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="help-outline" size={18} color={textSecondary} />
+        </TouchableOpacity>
+      </View>
+
       {/* scan button */}
       <View className="px-5 mb-5">
         <TouchableOpacity
