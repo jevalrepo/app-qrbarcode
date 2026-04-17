@@ -1,0 +1,196 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View, Text, TouchableOpacity, ScrollView, Linking, useColorScheme, Alert,
+} from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAppSettings, useT, useAccent } from '@/context/SettingsContext';
+import { QRType, getTypeLabel, getTypeIcon, getTypeColor, parseWifi } from '@/lib/detectType';
+
+export default function ResultScreen() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { data, type } = useLocalSearchParams<{ data: string; type: string }>();
+  const scheme = useColorScheme();
+  const isDark = scheme === 'dark';
+  const [copied, setCopied] = useState(false);
+  const { settings } = useAppSettings();
+  const t = useT();
+  const r = t.result;
+  const accent = useAccent();
+
+  const qrType = (type as QRType) ?? 'text';
+  const color = getTypeColor(qrType, accent);
+  const icon = getTypeIcon(qrType) as keyof typeof Ionicons.glyphMap;
+  const label = getTypeLabel(qrType);
+
+  useEffect(() => {
+    if (settings.autoOpenUrls && qrType === 'url' && data) {
+      Linking.openURL(data.startsWith('http') ? data : `https://${data}`).catch(() => {});
+    }
+  }, []);
+
+  const bg = isDark ? '#0A0A0A' : '#FFFFFF';
+  const bgSecondary = isDark ? '#141414' : '#F5F5F3';
+  const border = isDark ? '#2A2A2A' : '#E8E8E6';
+  const text = isDark ? '#F5F5F3' : '#0A0A0A';
+  const textSecondary = '#888780';
+
+  async function handleCopy() {
+    await Clipboard.setStringAsync(data ?? '');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleSmartAction() {
+    if (!data) return;
+    switch (qrType) {
+      case 'url':
+        await Linking.openURL(data.startsWith('http') ? data : `https://${data}`);
+        break;
+      case 'email':
+        await Linking.openURL(`mailto:${data.replace(/^mailto:/i, '')}`);
+        break;
+      case 'phone':
+        await Linking.openURL(`tel:${data.replace(/^tel:/i, '')}`);
+        break;
+      case 'wifi': {
+        const { ssid, password } = parseWifi(data);
+        Alert.alert(r.wifiTitle, `SSID: ${ssid}\n${r.copyPassword.replace('Copiar', '').trim()}: ${password}`, [
+          { text: r.copyPassword, onPress: () => Clipboard.setStringAsync(password) },
+          { text: 'OK' },
+        ]);
+        break;
+      }
+      case 'geo': {
+        const coords = data.replace(/^geo:/i, '');
+        await Linking.openURL(`maps:${coords}`).catch(() =>
+          Linking.openURL(`https://maps.google.com/?q=${coords}`),
+        );
+        break;
+      }
+      case 'sms':
+        await Linking.openURL(`sms:${data.replace(/^smsto?:/i, '').split(':')[0]}`);
+        break;
+      default:
+        handleCopy();
+    }
+  }
+
+  function getSmartActionLabel(): string {
+    switch (qrType) {
+      case 'url': return r.openUrl;
+      case 'email': return r.sendEmail;
+      case 'phone': return r.call;
+      case 'wifi': return r.seePassword;
+      case 'geo': return r.openMaps;
+      case 'sms': return r.sendSMS;
+      default: return r.copy;
+    }
+  }
+
+  function getSmartActionIcon(): keyof typeof Ionicons.glyphMap {
+    switch (qrType) {
+      case 'url': return 'open-outline';
+      case 'email': return 'send-outline';
+      case 'phone': return 'call-outline';
+      case 'wifi': return 'wifi-outline';
+      case 'geo': return 'map-outline';
+      case 'sms': return 'chatbubble-outline';
+      default: return 'copy-outline';
+    }
+  }
+
+  return (
+    <View style={{ flex: 1, backgroundColor: bg }}>
+      <View className="items-center pt-3 pb-1">
+        <View className="w-10 h-1 rounded-full" style={{ backgroundColor: border }} />
+      </View>
+
+      <View
+        className="flex-row items-center justify-between px-5 py-3"
+        style={{ borderBottomWidth: 0.5, borderBottomColor: border }}
+      >
+        <View style={{ width: 36 }} />
+        <Text className="text-base font-medium" style={{ color: text }}>{r.title}</Text>
+        <TouchableOpacity
+          onPress={() => router.replace('/')}
+          className="w-9 h-9 rounded-full items-center justify-center"
+          style={{ backgroundColor: bgSecondary }}
+        >
+          <Ionicons name="close" size={18} color={textSecondary} />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 20 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="flex-row items-center mb-4 gap-2">
+          <View
+            className="w-8 h-8 rounded-xl items-center justify-center"
+            style={{ backgroundColor: color + '2E' }}
+          >
+            <Ionicons name={icon} size={16} color={color} />
+          </View>
+          <Text className="text-sm font-medium" style={{ color }}>{label}</Text>
+        </View>
+
+        <View
+          className="rounded-2xl p-4 mb-4"
+          style={{ backgroundColor: bgSecondary, borderWidth: 0.5, borderColor: border }}
+        >
+          <Text
+            selectable
+            style={{
+              color: text,
+              fontFamily: qrType === 'url' ? 'Courier' : undefined,
+              fontSize: qrType === 'url' ? 13 : 15,
+              lineHeight: qrType === 'url' ? 20 : 22,
+            }}
+          >
+            {data}
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          onPress={handleSmartAction}
+          className="rounded-2xl py-4 flex-row items-center justify-center gap-2 mb-3"
+          style={{ backgroundColor: color }}
+          activeOpacity={0.85}
+        >
+          <Ionicons name={getSmartActionIcon()} size={18} color="white" />
+          <Text className="text-white font-medium text-base">{getSmartActionLabel()}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={handleCopy}
+          className="rounded-2xl py-4 flex-row items-center justify-center gap-2 mb-3"
+          style={{ backgroundColor: bgSecondary, borderWidth: 0.5, borderColor: border }}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={copied ? 'checkmark-outline' : 'copy-outline'}
+            size={18}
+            color={copied ? '#00C896' : textSecondary}
+          />
+          <Text className="font-medium text-base" style={{ color: copied ? '#00C896' : textSecondary }}>
+            {copied ? r.copied : r.copy}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => router.replace('/scanner')}
+          className="rounded-2xl py-4 flex-row items-center justify-center gap-2"
+          style={{ backgroundColor: bgSecondary, borderWidth: 0.5, borderColor: border }}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="scan-outline" size={18} color={textSecondary} />
+          <Text className="font-medium text-base" style={{ color: textSecondary }}>{r.scanAnother}</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
+  );
+}
