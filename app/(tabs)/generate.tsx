@@ -150,16 +150,6 @@ export default function GenerateScreen() {
     });
   }
 
-  async function handlePaste() {
-    const clip = await Clipboard.getStringAsync();
-    if (!clip) { Alert.alert('', g.clipboardEmpty); return; }
-    setActiveType('text');
-    setValue(clip);
-    setGenerated(clip);
-    setPreviewVisible(true);
-    setImageCopied(false);
-  }
-
   function handleTypeChange(type: QRGenerateType) {
     setActiveType(type);
     setValue('');
@@ -236,14 +226,6 @@ export default function GenerateScreen() {
                 </TouchableOpacity>
               );
             })}
-            <TouchableOpacity
-              onPress={handlePaste}
-              className="rounded-2xl px-4 py-3"
-              style={{ backgroundColor: bgTertiary, borderWidth: 0.5, borderColor: border, width: '48%' }}
-            >
-              <Ionicons name="clipboard-outline" size={16} color={textSecondary} />
-              <Text className="text-sm font-medium mt-2" style={{ color: text }}>{g.pasteFromClipboard}</Text>
-            </TouchableOpacity>
           </View>
 
           {/* main input */}
