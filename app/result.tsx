@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, Linking, Alert, Share,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import QRCode from 'react-native-qrcode-svg';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import * as Contacts from 'expo-contacts';
@@ -18,9 +19,12 @@ export default function ResultScreen() {
   const scheme = useThemeScheme();
   const isDark = scheme === 'dark';
   const [copied, setCopied] = useState(false);
+  const [imageCopied, setImageCopied] = useState(false);
+  const svgRef = useRef<{ toDataURL: (cb: (data: string) => void) => void } | null>(null);
   const { settings } = useAppSettings();
   const t = useT();
   const r = t.result;
+  const g = t.generate;
   const accent = useAccent();
 
   useInterstitialAd();
@@ -41,6 +45,19 @@ export default function ResultScreen() {
   const border = isDark ? '#2A2A2A' : '#E8E8E6';
   const text = isDark ? '#F5F5F3' : '#0A0A0A';
   const textSecondary = '#888780';
+
+  function handleCopyImage() {
+    if (!svgRef.current) return;
+    svgRef.current.toDataURL(async (base64: string) => {
+      try {
+        await Clipboard.setImageAsync(base64);
+        setImageCopied(true);
+        setTimeout(() => setImageCopied(false), 1800);
+      } catch {
+        Alert.alert('Error', g.imageCopyError);
+      }
+    });
+  }
 
   async function handleCopy() {
     await Clipboard.setStringAsync(data ?? '');
@@ -155,7 +172,7 @@ export default function ResultScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: bg }}>
-      <View className="items-center pt-3 pb-1">
+      <View style={{ paddingTop: insets.top + 8 }} className="items-center pb-1">
         <View className="w-10 h-1 rounded-full" style={{ backgroundColor: border }} />
       </View>
 
@@ -188,6 +205,35 @@ export default function ResultScreen() {
           <Text className="text-sm font-medium" style={{ color }}>{label}</Text>
         </View>
 
+        {/* QR oculto con fondo blanco, usado exclusivamente para copiar al clipboard */}
+        <View style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}>
+          <QRCode
+            value={data || ' '}
+            size={180}
+            backgroundColor="white"
+            color="#0A0A0A"
+            getRef={(ref) => { svgRef.current = ref as typeof svgRef.current; }}
+          />
+        </View>
+
+        <TouchableOpacity
+          onLongPress={handleCopyImage}
+          delayLongPress={220}
+          activeOpacity={1}
+          className="rounded-2xl p-5 mb-1 items-center"
+          style={{ backgroundColor: bgSecondary, borderWidth: 0.5, borderColor: border }}
+        >
+          <QRCode
+            value={data || ' '}
+            size={180}
+            backgroundColor="transparent"
+            color={isDark ? '#F5F5F3' : '#0A0A0A'}
+          />
+        </TouchableOpacity>
+        <Text className="text-xs text-center mb-4" style={{ color: imageCopied ? accent : textSecondary }}>
+          {imageCopied ? g.imageCopied : g.holdToCopy}
+        </Text>
+
         <View
           className="rounded-2xl p-4 mb-4"
           style={{ backgroundColor: bgSecondary, borderWidth: 0.5, borderColor: border }}
@@ -215,40 +261,32 @@ export default function ResultScreen() {
           <Text className="text-white font-medium text-base">{getSmartActionLabel()}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={handleCopy}
-          className="rounded-2xl py-4 flex-row items-center justify-center gap-2 mb-3"
-          style={{ backgroundColor: bgSecondary, borderWidth: 0.5, borderColor: border }}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name={copied ? 'checkmark-outline' : 'copy-outline'}
-            size={18}
-            color={copied ? '#00C896' : textSecondary}
-          />
-          <Text className="font-medium text-base" style={{ color: copied ? '#00C896' : textSecondary }}>
-            {copied ? r.copied : r.copy}
-          </Text>
-        </TouchableOpacity>
+        {getSmartActionLabel() !== r.copy && (
+          <TouchableOpacity
+            onPress={handleCopy}
+            className="rounded-2xl py-4 flex-row items-center justify-center gap-2 mb-3"
+            style={{ backgroundColor: bgSecondary, borderWidth: 0.5, borderColor: border }}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={copied ? 'checkmark-outline' : 'copy-outline'}
+              size={18}
+              color={copied ? '#00C896' : textSecondary}
+            />
+            <Text className="font-medium text-base" style={{ color: copied ? '#00C896' : textSecondary }}>
+              {copied ? r.copied : r.copy}
+            </Text>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity
           onPress={handleShare}
-          className="rounded-2xl py-4 flex-row items-center justify-center gap-2 mb-3"
+          className="rounded-2xl py-4 flex-row items-center justify-center gap-2"
           style={{ backgroundColor: bgSecondary, borderWidth: 0.5, borderColor: border }}
           activeOpacity={0.7}
         >
           <Ionicons name="share-outline" size={18} color={textSecondary} />
           <Text className="font-medium text-base" style={{ color: textSecondary }}>{r.share}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => router.replace('/scanner')}
-          className="rounded-2xl py-4 flex-row items-center justify-center gap-2"
-          style={{ backgroundColor: bgSecondary, borderWidth: 0.5, borderColor: border }}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="scan-outline" size={18} color={textSecondary} />
-          <Text className="font-medium text-base" style={{ color: textSecondary }}>{r.scanAnother}</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

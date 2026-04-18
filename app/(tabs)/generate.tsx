@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import BannerAdView from '@/components/BannerAdView';
 import {
   View, Text, TouchableOpacity, TextInput, ScrollView, Alert, Platform, Modal,
 } from 'react-native';
@@ -180,8 +181,9 @@ export default function GenerateScreen() {
   };
 
   return (
+    <View style={{ flex: 1, backgroundColor: bg }}>
     <ScrollView
-      style={{ flex: 1, backgroundColor: bg }}
+      style={{ flex: 1 }}
       contentContainerStyle={{ paddingTop: insets.top + 22, paddingBottom: 40 }}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
@@ -357,5 +359,7 @@ export default function GenerateScreen() {
         </View>
       </Modal>
     </ScrollView>
+    <BannerAdView />
+    </View>
   );
 }

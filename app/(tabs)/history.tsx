@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import BannerAdView from '@/components/BannerAdView';
 import {
   View, Text, TouchableOpacity, FlatList, Alert, ActivityIndicator, TextInput, ScrollView,
 } from 'react-native';
@@ -182,6 +183,7 @@ export default function HistoryScreen() {
           )}
         />
       )}
+      <BannerAdView />
     </View>
   );
 }

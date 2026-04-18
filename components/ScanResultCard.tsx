@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import QRCode from 'react-native-qrcode-svg';
 import { useRouter } from 'expo-router';
 import { HistoryItem } from '@/hooks/useHistory';
 import { getTypeLabel, getTypeIcon, getTypeColor } from '@/lib/detectType';
@@ -41,10 +42,9 @@ export default function ScanResultCard({ item, compact = false, showDivider = fa
         className={`flex-row items-center ${compact ? 'px-4 py-3' : 'px-4 py-4'}`}
       >
         <View
-          style={{ backgroundColor: color + '2E' }}
-          className="w-10 h-10 rounded-xl items-center justify-center mr-3"
+          style={{ backgroundColor: isDark ? '#1E1E1E' : '#F0F0EE', borderRadius: 10, padding: 3, marginRight: 12 }}
         >
-          <Ionicons name={icon} size={18} color={color} />
+          <QRCode value={item.data || ' '} size={34} backgroundColor="transparent" color={isDark ? '#F5F5F3' : '#0A0A0A'} />
         </View>
 
         <View className="flex-1 min-w-0">

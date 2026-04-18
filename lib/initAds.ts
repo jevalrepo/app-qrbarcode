@@ -1,5 +1,7 @@
-import mobileAds from 'react-native-google-mobile-ads';
+import { TurboModuleRegistry } from 'react-native';
 
 export function initializeAds() {
+  if (!TurboModuleRegistry.get('RNGoogleMobileAdsModule')) return;
+  const mobileAds = require('react-native-google-mobile-ads').default;
   mobileAds().initialize();
 }

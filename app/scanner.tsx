@@ -31,6 +31,7 @@ export default function ScannerScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [torch, setTorch] = useState(false);
   const [scanned, setScanned] = useState(false);
+  const scannedRef = useRef(false);
   const [cameraZoom, setCameraZoom] = useState(0);
   const { addToHistory } = useHistory();
   const { settings } = useAppSettings();
@@ -100,7 +101,9 @@ export default function ScannerScreen() {
 
   const handleBarcode = useCallback(
     async (result: BarcodeScanningResult) => {
-      if (scanned) return;
+      if (scannedRef.current) return;
+      scannedRef.current = true;
+
       setScanned(true);
 
       if (settings.haptics) {
@@ -114,11 +117,11 @@ export default function ScannerScreen() {
 
       const data = result.data;
       const type = detectType(data);
-      await addToHistory({ data, type });
 
+      await addToHistory({ data, type });
       router.replace({ pathname: '/result', params: { data, type } });
     },
-    [scanned, frameScale, addToHistory, router, settings.haptics],
+    [frameScale, addToHistory, router, settings.haptics],
   );
 
   async function handleGallery() {
@@ -275,7 +278,7 @@ export default function ScannerScreen() {
 
         {scanned && (
           <TouchableOpacity
-            onPress={() => setScanned(false)}
+            onPress={() => { scannedRef.current = false; setScanned(false); }}
             className="mt-4 px-6 py-3 rounded-2xl"
             style={{ backgroundColor: accent }}
           >

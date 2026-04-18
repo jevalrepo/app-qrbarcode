@@ -1,13 +1,23 @@
 import { useEffect, useRef } from 'react';
-import { InterstitialAd, AdEventType } from 'react-native-google-mobile-ads';
+import { TurboModuleRegistry } from 'react-native';
 import { AD_UNITS, incrementScanCount, shouldShowInterstitial } from '@/lib/ads';
 
-const interstitial = InterstitialAd.createForAdRequest(AD_UNITS.interstitial);
+const adsAvailable = !!TurboModuleRegistry.get('RNGoogleMobileAdsModule');
+
+let interstitial: any = null;
+let AdEventType: any = null;
+if (adsAvailable) {
+  const ads = require('react-native-google-mobile-ads');
+  AdEventType = ads.AdEventType;
+  interstitial = ads.InterstitialAd.createForAdRequest(AD_UNITS.interstitial);
+}
 
 export function useInterstitialAd() {
   const adLoaded = useRef(false);
 
   useEffect(() => {
+    if (!interstitial || !AdEventType) return;
+
     const pendingShow = { value: false };
 
     const unsubscribe = interstitial.addAdEventListener(AdEventType.LOADED, () => {
