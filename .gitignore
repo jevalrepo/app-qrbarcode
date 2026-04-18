@@ -19,3 +19,28 @@ dist/
 .env
 .env.local
 .env*.local
+
+# Android build artifacts
+android/local.properties
+android/.gradle/
+android/app/build/
+android/build/
+android/.cxx/
+
+# Signing keys (NEVER commitear)
+*.keystore
+*.jks
+android/app/debug.keystore
+
+# iOS
+ios/Pods/
+ios/build/
+*.xcworkspace/xcuserdata
+
+# Logs
+npm-debug.log*
+yarn-error.log*
+*.log
+
+# TypeScript
+*.tsbuildinfo
