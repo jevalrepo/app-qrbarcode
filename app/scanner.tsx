@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
+import BarcodeScanning from '@react-native-ml-kit/barcode-scanning';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
@@ -130,12 +131,26 @@ export default function ScannerScreen() {
       Alert.alert('', s.galleryPermissionError);
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
+    const picked = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       quality: 1,
     });
-    if (result.canceled) return;
-    Alert.alert('', s.galleryError);
+    if (picked.canceled) return;
+
+    try {
+      const barcodes = await BarcodeScanning.scan(picked.assets[0].uri);
+      if (barcodes.length === 0) {
+        Alert.alert('', s.galleryError);
+        return;
+      }
+      const data = barcodes[0].value ?? '';
+      const type = detectType(data);
+      await addToHistory({ data, type });
+      router.replace({ pathname: '/result', params: { data, type } });
+    } catch (e) {
+      console.error('[Gallery] scan error:', e);
+      Alert.alert('Error', String(e));
+    }
   }
 
   if (!permission) return <View className="flex-1 bg-black" />;
