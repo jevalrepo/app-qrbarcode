@@ -10,7 +10,6 @@ import * as Contacts from 'expo-contacts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppSettings, useT, useAccent, useThemeScheme } from '@/context/SettingsContext';
 import { QRType, getTypeLabel, getTypeIcon, getTypeColor, parseWifi } from '@/lib/detectType';
-import { useInterstitialAd } from '@/lib/useInterstitialAd';
 
 export default function ResultScreen() {
   const router = useRouter();
@@ -26,8 +25,6 @@ export default function ResultScreen() {
   const r = t.result;
   const g = t.generate;
   const accent = useAccent();
-
-  useInterstitialAd();
 
   const qrType = (type as QRType) ?? 'text';
   const color = getTypeColor(qrType, accent);

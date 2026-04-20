@@ -7,6 +7,7 @@ import { useHistory } from '@/hooks/useHistory';
 import { useT, useAccent, useThemeScheme } from '@/context/SettingsContext';
 import ScanResultCard from '@/components/ScanResultCard';
 import BannerAdView from '@/components/BannerAdView';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -141,6 +142,15 @@ export default function HomeScreen() {
           </View>
         )}
       </View>
+
+      {/* TEMP: forzar límite de escaneos */}
+      <TouchableOpacity
+        onPress={() => AsyncStorage.setItem('@scan_gate', JSON.stringify({ count: 5, date: new Date().toISOString().split('T')[0] }))}
+        className="mx-5 mt-4 py-3 rounded-2xl items-center"
+        style={{ backgroundColor: '#D85A30' }}
+      >
+        <Text style={{ color: 'white', fontWeight: '600' }}>🧪 Simular límite de escaneos</Text>
+      </TouchableOpacity>
     </ScrollView>
     <BannerAdView />
     </View>

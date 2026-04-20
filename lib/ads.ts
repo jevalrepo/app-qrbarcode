@@ -13,6 +13,10 @@ const TEST_IDS = {
     android: 'ca-app-pub-3940256099942544/1033173712',
     ios: 'ca-app-pub-3940256099942544/4411468910',
   }) as string,
+  rewardedInterstitial: Platform.select({
+    android: 'ca-app-pub-3940256099942544/5354046379',
+    ios: 'ca-app-pub-3940256099942544/6978759866',
+  }) as string,
 };
 
 const PRODUCTION_IDS = {
@@ -22,6 +26,10 @@ const PRODUCTION_IDS = {
   }) as string,
   interstitial: Platform.select({
     android: 'ca-app-pub-8093662880798686/3269827052',
+    ios: '',
+  }) as string,
+  rewardedInterstitial: Platform.select({
+    android: '',
     ios: '',
   }) as string,
 };

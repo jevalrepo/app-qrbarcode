@@ -19,6 +19,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHistory } from '@/hooks/useHistory';
 import { detectType } from '@/lib/detectType';
 import { useT, useAccent, useAppSettings } from '@/context/SettingsContext';
+import { canScan, incrementScanCount } from '@/lib/scanGate';
+import ScanLimitModal from '@/components/ScanLimitModal';
 
 const { width } = Dimensions.get('window');
 const FRAME_SIZE = width * 0.68;
@@ -34,6 +36,7 @@ export default function ScannerScreen() {
   const [scanned, setScanned] = useState(false);
   const scannedRef = useRef(false);
   const [cameraZoom, setCameraZoom] = useState(0);
+  const [showLimitModal, setShowLimitModal] = useState(false);
   const { addToHistory } = useHistory();
   const { settings } = useAppSettings();
   const t = useT();
@@ -100,10 +103,24 @@ export default function ScannerScreen() {
     ).start();
   }, [scanLineAnim]);
 
+  useEffect(() => {
+    canScan().then((allowed) => {
+      if (!allowed) setShowLimitModal(true);
+    });
+  }, []);
+
   const handleBarcode = useCallback(
     async (result: BarcodeScanningResult) => {
       if (scannedRef.current) return;
       scannedRef.current = true;
+
+      const allowed = await canScan();
+      console.log('[ScanGate] canScan:', allowed);
+      if (!allowed) {
+        setShowLimitModal(true);
+        scannedRef.current = false;
+        return;
+      }
 
       setScanned(true);
 
@@ -119,6 +136,7 @@ export default function ScannerScreen() {
       const data = result.data;
       const type = detectType(data);
 
+      await incrementScanCount();
       await addToHistory({ data, type });
       router.replace({ pathname: '/result', params: { data, type } });
     },
@@ -301,6 +319,12 @@ export default function ScannerScreen() {
           </TouchableOpacity>
         )}
       </View>
+
+      <ScanLimitModal
+        visible={showLimitModal}
+        onClose={() => { setShowLimitModal(false); router.back(); }}
+        onRewarded={() => setShowLimitModal(false)}
+      />
     </View>
   );
 }

@@ -30,6 +30,14 @@ const es = {
     galleryError: 'No se encontró ningún código en la imagen',
     galleryPermissionError: 'Se necesita permiso para acceder a la galería',
   },
+  scanLimit: {
+    title: 'Límite diario alcanzado',
+    message: 'Has usado tus 5 escaneos de hoy. Mira un anuncio para desbloquear 5 más o hazte PRO.',
+    watchAd: 'Ver anuncio',
+    goPro: 'Hacerse PRO',
+    close: 'Cerrar',
+    adLoading: 'Cargando anuncio...',
+  },
   result: {
     title: 'Resultado',
     copy: 'Copiar texto',
@@ -101,6 +109,9 @@ const es = {
     imageCopied: 'Imagen copiada al portapapeles.',
     shareError: 'No se pudo compartir el QR.',
     imageCopyError: 'No se pudo copiar la imagen.',
+    saveToGallery: 'Guardar en galería',
+    savedToGallery: 'Guardado en galería',
+    saveError: 'No se pudo guardar la imagen.',
   },
   settings: {
     title: 'Configuración',
@@ -174,6 +185,14 @@ const en: typeof es = {
     galleryError: 'No code found in the image',
     galleryPermissionError: 'Permission to access gallery is required',
   },
+  scanLimit: {
+    title: 'Daily limit reached',
+    message: "You've used your 5 scans for today. Watch an ad to unlock 5 more or go PRO.",
+    watchAd: 'Watch ad',
+    goPro: 'Go PRO',
+    close: 'Close',
+    adLoading: 'Loading ad...',
+  },
   result: {
     title: 'Result',
     copy: 'Copy text',
@@ -245,6 +264,9 @@ const en: typeof es = {
     imageCopied: 'Image copied to clipboard.',
     shareError: 'Could not share the QR code.',
     imageCopyError: 'Could not copy the image.',
+    saveToGallery: 'Save to Gallery',
+    savedToGallery: 'Saved to Gallery',
+    saveError: 'Could not save the image.',
   },
   settings: {
     title: 'Settings',

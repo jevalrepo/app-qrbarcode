@@ -8,6 +8,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
+
+let MediaLibrary: any = null;
+try { MediaLibrary = require('expo-media-library'); } catch {}
 import QRCode from 'react-native-qrcode-svg';
 import { useT, useAccent, useThemeScheme } from '@/context/SettingsContext';
 
@@ -102,6 +105,7 @@ export default function GenerateScreen() {
   const [generated, setGenerated] = useState<string | null>(null);
   const [previewVisible, setPreviewVisible] = useState(false);
   const [imageCopied, setImageCopied] = useState(false);
+  const [imageSaved, setImageSaved] = useState(false);
   const svgRef = useRef<{ toDataURL: (cb: (data: string) => void) => void } | null>(null);
 
   const bg = isDark ? '#0A0A0A' : '#FFFFFF';
@@ -122,6 +126,26 @@ export default function GenerateScreen() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  }
+
+  async function handleSaveToGallery() {
+    if (!svgRef.current || !generated || !MediaLibrary) return;
+    svgRef.current.toDataURL(async (base64: string) => {
+      try {
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Error', g.saveError);
+          return;
+        }
+        const path = `${FileSystem.cacheDirectory}qr-barcode-scanner_${Date.now()}.png`;
+        await FileSystem.writeAsStringAsync(path, base64, { encoding: FileSystem.EncodingType.Base64 });
+        await MediaLibrary.saveToLibraryAsync(path);
+        setImageSaved(true);
+        setTimeout(() => setImageSaved(false), 1800);
+      } catch {
+        Alert.alert('Error', g.saveError);
+      }
+    });
   }
 
   async function handleShare() {
@@ -346,6 +370,24 @@ export default function GenerateScreen() {
                 {Platform.OS === 'web' ? g.download : g.share}
               </Text>
             </TouchableOpacity>
+
+            {Platform.OS !== 'web' && (
+              <TouchableOpacity
+                onPress={handleSaveToGallery}
+                className="rounded-2xl py-4 flex-row items-center justify-center gap-2 mb-2"
+                style={{ backgroundColor: bgTertiary }}
+                activeOpacity={0.75}
+              >
+                <Ionicons
+                  name={imageSaved ? 'checkmark-outline' : 'download-outline'}
+                  size={18}
+                  color={imageSaved ? '#00C896' : textSecondary}
+                />
+                <Text className="font-medium text-base" style={{ color: imageSaved ? '#00C896' : textSecondary }}>
+                  {imageSaved ? g.savedToGallery : g.saveToGallery}
+                </Text>
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               onPress={() => setPreviewVisible(false)}
