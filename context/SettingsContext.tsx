@@ -12,6 +12,7 @@ export interface Settings {
   haptics: boolean;
   language: Language;
   accentColor: string;
+  isPro: boolean;
 }
 
 const DEFAULT: Settings = {
@@ -20,6 +21,7 @@ const DEFAULT: Settings = {
   haptics: true,
   language: 'es',
   accentColor: DEFAULT_ACCENT,
+  isPro: false,
 };
 
 const STORAGE_KEY = 'qrclean_settings';

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, TurboModuleRegistry } from 'react-native';
 import { AD_UNITS } from '@/lib/ads';
+import { useAppSettings } from '@/context/SettingsContext';
 
 const adsAvailable = !!TurboModuleRegistry.get('RNGoogleMobileAdsModule');
 
@@ -13,7 +14,8 @@ if (adsAvailable) {
 }
 
 export default function BannerAdView() {
-  if (!BannerAd || !BannerAdSize) return null;
+  const { settings } = useAppSettings();
+  if (!BannerAd || !BannerAdSize || settings.isPro) return null;
   return (
     <View style={{ alignItems: 'center', width: '100%' }}>
       <BannerAd

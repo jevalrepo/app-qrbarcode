@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(adb devices)",
+      "Bash(adb logcat *)",
+      "Bash(npm run android)",
+      "Bash(npm run ios)",
+      "Bash(npm run start)",
+      "Bash(npm run web)",
+      "Bash(npx expo start *)",
+      "Bash(npx expo run:android *)",
+      "Bash(npx expo run:ios *)"
+    ]
+  }
+}

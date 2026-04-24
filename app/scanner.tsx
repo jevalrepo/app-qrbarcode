@@ -104,6 +104,7 @@ export default function ScannerScreen() {
   }, [scanLineAnim]);
 
   useEffect(() => {
+    if (settings.isPro) return;
     canScan().then((allowed) => {
       if (!allowed) setShowLimitModal(true);
     });
@@ -114,12 +115,14 @@ export default function ScannerScreen() {
       if (scannedRef.current) return;
       scannedRef.current = true;
 
-      const allowed = await canScan();
-      console.log('[ScanGate] canScan:', allowed);
-      if (!allowed) {
-        setShowLimitModal(true);
-        scannedRef.current = false;
-        return;
+      if (!settings.isPro) {
+        const allowed = await canScan();
+        console.log('[ScanGate] canScan:', allowed);
+        if (!allowed) {
+          setShowLimitModal(true);
+          scannedRef.current = false;
+          return;
+        }
       }
 
       setScanned(true);

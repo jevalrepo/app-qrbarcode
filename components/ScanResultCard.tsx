@@ -12,6 +12,7 @@ interface Props {
   compact?: boolean;
   showDivider?: boolean;
   onToggleFavorite?: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 function timeAgo(ms: number): string {
@@ -24,67 +25,67 @@ function timeAgo(ms: number): string {
   return `${Math.floor(hrs / 24)}d`;
 }
 
-export default function ScanResultCard({ item, compact = false, showDivider = false, onToggleFavorite }: Props) {
+export default function ScanResultCard({ item, compact = false, showDivider = false, onToggleFavorite, onDelete }: Props) {
   const router = useRouter();
   const scheme = useThemeScheme();
   const isDark = scheme === 'dark';
   const accent = useAccent();
 
   const color = getTypeColor(item.type, accent);
-  const icon = getTypeIcon(item.type) as keyof typeof Ionicons.glyphMap;
   const label = getTypeLabel(item.type);
+  const subtleColor = isDark ? '#3A3A3A' : '#DDDDD8';
 
   return (
     <>
       <TouchableOpacity
         onPress={() => router.push({ pathname: '/result', params: { data: item.data, type: item.type } })}
         activeOpacity={0.7}
-        className={`flex-row items-center ${compact ? 'px-4 py-3' : 'px-4 py-4'}`}
+        style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: compact ? 12 : 14 }}
       >
-        <View
-          style={{ backgroundColor: isDark ? '#1E1E1E' : '#F0F0EE', borderRadius: 10, padding: 3, marginRight: 12 }}
-        >
+        <View style={{ backgroundColor: isDark ? '#1E1E1E' : '#F0F0EE', borderRadius: 10, padding: 3, marginRight: 12 }}>
           <QRCode value={item.data || ' '} size={34} backgroundColor="transparent" color={isDark ? '#F5F5F3' : '#0A0A0A'} />
         </View>
 
-        <View className="flex-1 min-w-0">
-          <Text
-            numberOfLines={1}
-            className="text-sm font-medium"
-            style={{ color: isDark ? '#F5F5F3' : '#0A0A0A' }}
-          >
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text numberOfLines={1} style={{ fontSize: 14, fontWeight: '500', color: isDark ? '#F5F5F3' : '#0A0A0A' }}>
             {item.data}
           </Text>
-          <View className="flex-row items-center mt-0.5 gap-1.5">
-            <Text className="text-xs font-medium" style={{ color }}>{label}</Text>
-            <Text className="text-xs" style={{ color: '#888780' }}>· {timeAgo(item.scannedAt)}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2, gap: 6 }}>
+            <Text style={{ fontSize: 12, fontWeight: '500', color }}>{label}</Text>
+            <Text style={{ fontSize: 12, color: '#888780' }}>· {timeAgo(item.scannedAt)}</Text>
           </View>
         </View>
 
-        {onToggleFavorite ? (
-          <TouchableOpacity
-            onPress={(e) => { e.stopPropagation(); onToggleFavorite(item.id); }}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            style={{ marginLeft: 8 }}
-          >
-            <Ionicons
-              name={item.favorite ? 'star' : 'star-outline'}
-              size={16}
-              color={item.favorite ? '#EF9F27' : isDark ? '#2A2A2A' : '#EBEBEA'}
-            />
-          </TouchableOpacity>
-        ) : (
-          <Ionicons
-            name="chevron-forward"
-            size={16}
-            color={isDark ? '#2A2A2A' : '#EBEBEA'}
-            style={{ marginLeft: 8 }}
-          />
-        )}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginLeft: 8 }}>
+          {onToggleFavorite && (
+            <TouchableOpacity
+              onPress={(e) => { e.stopPropagation(); onToggleFavorite(item.id); }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              style={{ padding: 4 }}
+            >
+              <Ionicons
+                name={item.favorite ? 'star' : 'star-outline'}
+                size={16}
+                color={item.favorite ? '#EF9F27' : subtleColor}
+              />
+            </TouchableOpacity>
+          )}
+          {onDelete ? (
+            <TouchableOpacity
+              onPress={(e) => { e.stopPropagation(); onDelete(item.id); }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              style={{ padding: 4 }}
+            >
+              <Ionicons name="trash-outline" size={16} color={isDark ? '#555550' : '#C0C0BA'} />
+            </TouchableOpacity>
+          ) : (
+            !onToggleFavorite && <Ionicons name="chevron-forward" size={16} color={subtleColor} />
+          )}
+        </View>
       </TouchableOpacity>
 
       {showDivider && (
-        <View className="h-px mx-4" style={{ backgroundColor: isDark ? '#2A2A2A' : '#E8E8E6' }} />
+        <View style={{ height: 1, marginHorizontal: 16, backgroundColor: isDark ? '#2A2A2A' : '#E8E8E6' }} />
       )}
     </>
   );

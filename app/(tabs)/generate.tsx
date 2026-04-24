@@ -13,6 +13,8 @@ let MediaLibrary: any = null;
 try { MediaLibrary = require('expo-media-library'); } catch {}
 import QRCode from 'react-native-qrcode-svg';
 import { useT, useAccent, useThemeScheme } from '@/context/SettingsContext';
+import { useGenerationHistory } from '@/hooks/useGenerationHistory';
+import { QRType } from '@/lib/detectType';
 
 type QRGenerateType = 'url' | 'text' | 'wifi' | 'email' | 'phone' | 'vcard';
 
@@ -96,6 +98,7 @@ export default function GenerateScreen() {
   const g = t.generate;
   const accent = useAccent();
 
+  const { addToGenerationHistory } = useGenerationHistory();
   const [activeType, setActiveType] = useState<QRGenerateType>('url');
   const [value, setValue] = useState('');
   const [wifiPass, setWifiPass] = useState('');
@@ -192,6 +195,7 @@ export default function GenerateScreen() {
     setGenerated(next);
     setPreviewVisible(true);
     setImageCopied(false);
+    addToGenerationHistory({ data: next, type: activeType as QRType });
   }
 
   const labelMap: Record<QRGenerateType, string> = {
@@ -347,6 +351,7 @@ export default function GenerateScreen() {
                   size={220}
                   backgroundColor="white"
                   color="#0A0A0A"
+                  quietZone={16}
                   getRef={(ref) => { svgRef.current = ref as typeof svgRef.current; }}
                 />
               </View>

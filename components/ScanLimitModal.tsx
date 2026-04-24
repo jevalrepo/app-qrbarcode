@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useT, useAccent, useThemeScheme } from '@/context/SettingsContext';
 import { resetScanCount } from '@/lib/scanGate';
 import { AD_UNITS } from '@/lib/ads';
+import { presentPaywall } from '@/lib/revenueCat';
 import { TurboModuleRegistry } from 'react-native';
 
 let RewardedInterstitialAd: any = null;
@@ -122,7 +123,7 @@ export default function ScanLimitModal({ visible, onClose, onRewarded }: Props) 
 
             {/* Hacerse PRO */}
             <TouchableOpacity
-              onPress={() => {}}
+              onPress={presentPaywall}
               activeOpacity={0.85}
               style={{
                 backgroundColor: bgSecondary, borderRadius: 18, paddingVertical: 16,

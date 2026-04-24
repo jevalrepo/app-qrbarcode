@@ -6,8 +6,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { SettingsProvider, useThemeScheme } from '@/context/SettingsContext';
 import { initializeAds } from '@/lib/initAds';
+import { useRevenueCat } from '@/hooks/useRevenueCat';
 
 function RootNavigator() {
+  useRevenueCat();
   const scheme = useThemeScheme();
 
   useEffect(() => {

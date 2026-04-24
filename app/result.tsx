@@ -180,7 +180,7 @@ export default function ResultScreen() {
         <View style={{ width: 36 }} />
         <Text className="text-base font-medium" style={{ color: text }}>{r.title}</Text>
         <TouchableOpacity
-          onPress={() => router.replace('/')}
+          onPress={() => router.back()}
           className="w-9 h-9 rounded-full items-center justify-center"
           style={{ backgroundColor: bgSecondary }}
         >

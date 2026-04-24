@@ -12,6 +12,7 @@ import {
 } from "@/context/SettingsContext";
 import { Language, LANGUAGE_LABELS } from "@/lib/i18n";
 import { ACCENT_COLORS } from "@/lib/accent";
+import { presentPaywall, restorePurchases, presentCustomerCenter } from "@/lib/revenueCat";
 
 type ThemeOption = {
   id: ThemePreference;
@@ -46,6 +47,7 @@ export default function SettingsScreen() {
   const t = useT();
   const s = t.settings;
   const accent = useAccent();
+  const isPro = settings.isPro;
 
   const bg = isDark ? "#0A0A0A" : "#FFFFFF";
   const bgSecondary = isDark ? "#141414" : "#F5F5F3";
@@ -64,48 +66,59 @@ export default function SettingsScreen() {
       <View className="px-5 mb-6">
         <View
           className="rounded-2xl overflow-hidden"
-          style={{ backgroundColor: accent }}
+          style={{ backgroundColor: isPro ? '#00C896' : accent }}
         >
-          <TouchableOpacity activeOpacity={0.85} className="px-4 py-4">
-            <View className="flex-row items-center justify-between">
-              <View>
-                <View className="flex-row items-center gap-1.5 mb-1">
-                  <Ionicons name="star" size={12} color="white" />
-                  <Text className="text-xs font-bold text-white">
-                    {t.pro.badge}
+          <TouchableOpacity
+            onPress={isPro ? presentCustomerCenter : presentPaywall}
+            activeOpacity={0.85}
+            className="px-4 py-4"
+          >
+            {isPro ? (
+              <View className="flex-row items-center justify-between">
+                <View>
+                  <View className="flex-row items-center gap-1.5 mb-1">
+                    <Ionicons name="star" size={12} color="white" />
+                    <Text className="text-xs font-bold text-white">{t.pro.badge}</Text>
+                  </View>
+                  <Text className="text-sm font-semibold text-white">{t.pro.alreadyPro}</Text>
+                  <Text className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.6)" }}>
+                    {t.pro.description}
                   </Text>
                 </View>
-                <Text className="text-sm font-semibold text-white">
-                  {t.pro.title}
-                </Text>
-                <Text
-                  className="text-xs mt-0.5"
-                  style={{ color: "rgba(255,255,255,0.6)" }}
-                >
-                  {t.pro.description}
-                </Text>
+                <Ionicons name="checkmark-circle" size={36} color="white" />
               </View>
-              <View className="items-end gap-2">
-                <Text className="text-lg font-bold text-white">
-                  {t.pro.price}
-                </Text>
-                <View className="bg-white/20 rounded-xl px-3 py-1.5">
-                  <Text className="text-xs font-semibold text-white">
-                    {t.pro.cta}
+            ) : (
+              <View className="flex-row items-center justify-between">
+                <View>
+                  <View className="flex-row items-center gap-1.5 mb-1">
+                    <Ionicons name="star" size={12} color="white" />
+                    <Text className="text-xs font-bold text-white">{t.pro.badge}</Text>
+                  </View>
+                  <Text className="text-sm font-semibold text-white">{t.pro.title}</Text>
+                  <Text className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.6)" }}>
+                    {t.pro.description}
                   </Text>
                 </View>
+                <View className="items-end gap-2">
+                  <Text className="text-lg font-bold text-white">{t.pro.price}</Text>
+                  <View className="bg-white/20 rounded-xl px-3 py-1.5">
+                    <Text className="text-xs font-semibold text-white">{t.pro.cta}</Text>
+                  </View>
+                </View>
               </View>
-            </View>
+            )}
           </TouchableOpacity>
-          <View
-            style={{ height: 0.5, backgroundColor: "rgba(255,255,255,0.15)" }}
-          />
-          <TouchableOpacity activeOpacity={0.7} className="items-center py-2.5">
-            <Text
-              className="text-xs"
-              style={{ color: "rgba(255,255,255,0.5)" }}
-            >
-              {t.pro.restore}
+          <View style={{ height: 0.5, backgroundColor: "rgba(255,255,255,0.15)" }} />
+          <TouchableOpacity
+            onPress={isPro
+              ? presentCustomerCenter
+              : () => restorePurchases(t.pro.restoreSuccess, t.pro.restoreNotFound)
+            }
+            activeOpacity={0.7}
+            className="items-center py-2.5"
+          >
+            <Text className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+              {isPro ? t.pro.manage : t.pro.restore}
             </Text>
           </TouchableOpacity>
         </View>

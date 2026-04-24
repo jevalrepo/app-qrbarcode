@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHistory } from '@/hooks/useHistory';
-import { useT, useAccent, useThemeScheme } from '@/context/SettingsContext';
+import { useT, useAccent, useThemeScheme, useAppSettings } from '@/context/SettingsContext';
 import ScanResultCard from '@/components/ScanResultCard';
 import BannerAdView from '@/components/BannerAdView';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -15,6 +15,7 @@ export default function HomeScreen() {
   const scheme = useThemeScheme();
   const isDark = scheme === 'dark';
   const { history } = useHistory();
+  const { settings, updateSettings } = useAppSettings();
   const t = useT();
   const h = t.home;
   const accent = useAccent();
@@ -143,13 +144,22 @@ export default function HomeScreen() {
         )}
       </View>
 
-      {/* TEMP: forzar límite de escaneos */}
+      {/* TEMP: debug buttons */}
       <TouchableOpacity
         onPress={() => AsyncStorage.setItem('@scan_gate', JSON.stringify({ count: 5, date: new Date().toISOString().split('T')[0] }))}
         className="mx-5 mt-4 py-3 rounded-2xl items-center"
         style={{ backgroundColor: '#D85A30' }}
       >
         <Text style={{ color: 'white', fontWeight: '600' }}>🧪 Simular límite de escaneos</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => updateSettings({ isPro: !settings.isPro })}
+        className="mx-5 mt-2 py-3 rounded-2xl items-center"
+        style={{ backgroundColor: settings.isPro ? '#00C896' : '#5A5A5A' }}
+      >
+        <Text style={{ color: 'white', fontWeight: '600' }}>
+          {settings.isPro ? '⭐ PRO activo — toca para desactivar' : '🔒 Simular usuario PRO'}
+        </Text>
       </TouchableOpacity>
     </ScrollView>
     <BannerAdView />

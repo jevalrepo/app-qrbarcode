@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QRType } from '@/lib/detectType';
 
 // TODO [PRO]: Increase MAX_ITEMS to Infinity for Pro subscribers (paywall check here)
-const MAX_ITEMS = 20;
+const MAX_ITEMS = 10;
 const STORAGE_KEY = 'qrclean_history';
 
 export interface HistoryItem {
@@ -79,5 +79,10 @@ export function useHistory() {
     });
   }, []);
 
-  return { history, loading, addToHistory, removeFromHistory, toggleFavorite, clearHistory };
+  const reload = useCallback(async () => {
+    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    setHistory(raw ? JSON.parse(raw) : []);
+  }, []);
+
+  return { history, loading, addToHistory, removeFromHistory, toggleFavorite, clearHistory, reload };
 }
