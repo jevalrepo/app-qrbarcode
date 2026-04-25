@@ -13,7 +13,8 @@ export interface PrivacyPolicy {
   contact: string;
 }
 
-const APP_NAME = 'VLTECH';
+const APP_NAME = 'ScanCodi';
+const COMPANY_NAME = 'VLTECH';
 const CONTACT_EMAIL = 'support@vltech.mx';
 const LAST_UPDATED = '24 de abril de 2026';
 const LAST_UPDATED_EN = 'April 24, 2026';
@@ -25,7 +26,7 @@ const es: PrivacyPolicy = {
   sections: [
     {
       title: '1. Alcance de esta política',
-      body: `Esta política aplica al uso de ScanCodi QR en dispositivos Android y a las funciones incluidas dentro de la aplicación, como escaneo de códigos QR y de barras, generación de códigos, guardado local de historial, exportación de imágenes, guardado de contactos desde vCard, anuncios en la versión gratuita y compras dentro de la app para desbloquear funciones premium.`,
+      body: `Esta política aplica al uso de ScanCodi — QR & Barcode Scanner en dispositivos Android y a las funciones incluidas dentro de la aplicación, como escaneo de códigos QR y de barras, generación de códigos, guardado local de historial, exportación de imágenes, guardado de contactos desde vCard, anuncios en la versión gratuita y compras dentro de la app para desbloquear funciones premium.`,
     },
     {
       title: '2. Información que procesamos',
@@ -102,7 +103,7 @@ const en: PrivacyPolicy = {
   sections: [
     {
       title: '1. Scope of This Policy',
-      body: `This policy applies to the use of ScanCodi QR on Android devices and to the features included in the application, such as QR and barcode scanning, code generation, local history storage, image export, saving contacts from vCards, advertising in the free version, and in-app purchases used to unlock premium functionality.`,
+      body: `This policy applies to the use of ScanCodi — QR & Barcode Scanner on Android devices and to the features included in the application, such as QR and barcode scanning, code generation, local history storage, image export, saving contacts from vCards, advertising in the free version, and in-app purchases used to unlock premium functionality.`,
     },
     {
       title: '2. Information We Process',

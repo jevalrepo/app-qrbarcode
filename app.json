@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "QR & Barcode Scanner",
+    "name": "ScanCodi — QR & Barcode Scanner",
     "slug": "qr-clean",
     "version": "1.0.0",
     "scheme": "qrclean",

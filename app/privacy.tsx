@@ -84,7 +84,7 @@ export default function PrivacyScreen() {
                 padding: 16,
               }}
             >
-              <Text style={{ fontSize: 13, color: textSecondary, lineHeight: 21 }}>
+              <Text style={{ fontSize: 13, color: text, lineHeight: 21 }}>
                 {section.body}
               </Text>
             </View>
