@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Switch, TouchableOpacity, ScrollView } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -48,6 +49,30 @@ export default function SettingsScreen() {
   const s = t.settings;
   const accent = useAccent();
   const isPro = settings.isPro;
+  const [proPrice, setProPrice] = useState<string>(t.pro.price);
+
+  useEffect(() => {
+    const PRICE_KEY = 'qrclean_pro_price';
+
+    // Cargar precio cacheado primero (evita mostrar el de i18n si ya hay uno guardado)
+    AsyncStorage.getItem(PRICE_KEY).then((cached) => {
+      if (cached) setProPrice(cached);
+    });
+
+    // Intentar obtener precio actualizado de RevenueCat
+    try {
+      const Purchases = require('react-native-purchases').default;
+      Purchases.getOfferings()
+        .then((offerings: any) => {
+          const price = offerings?.current?.availablePackages?.[0]?.product?.priceString;
+          if (price) {
+            setProPrice(price);
+            AsyncStorage.setItem(PRICE_KEY, price);
+          }
+        })
+        .catch(() => {});
+    } catch {}
+  }, []);
 
   const bg = isDark ? "#0A0A0A" : "#FFFFFF";
   const bgSecondary = isDark ? "#141414" : "#F5F5F3";
@@ -100,7 +125,7 @@ export default function SettingsScreen() {
                   </Text>
                 </View>
                 <View className="items-end gap-2">
-                  <Text className="text-lg font-bold text-white">{t.pro.price}</Text>
+                  <Text className="text-lg font-bold text-white">{proPrice}</Text>
                   <View className="bg-white/20 rounded-xl px-3 py-1.5">
                     <Text className="text-xs font-semibold text-white">{t.pro.cta}</Text>
                   </View>

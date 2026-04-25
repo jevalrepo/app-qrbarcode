@@ -22,15 +22,15 @@ const TEST_IDS = {
 const PRODUCTION_IDS = {
   banner: Platform.select({
     android: 'ca-app-pub-8093662880798686/3461398748',
-    ios: '',
+    ios: 'ca-app-pub-8093662880798686/2617006778',
   }) as string,
   interstitial: Platform.select({
     android: 'ca-app-pub-8093662880798686/3269827052',
-    ios: '',
+    ios: 'ca-app-pub-8093662880798686/1830538712',
   }) as string,
   rewardedInterstitial: Platform.select({
-    android: '',
-    ios: '',
+    android: 'ca-app-pub-8093662880798686/2263362567',
+    ios: 'ca-app-pub-8093662880798686/2317623870',
   }) as string,
 };
 

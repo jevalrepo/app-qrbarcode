@@ -114,23 +114,6 @@ case "$( uname )" in                #(
   NONSTOP* )        nonstop=true ;;
 esac
 
-for node_dir in /usr/local/bin /opt/homebrew/bin
-do
-    case ":$PATH:" in
-      *":$node_dir:"*) ;;
-      *) PATH="$node_dir:$PATH" ;;
-    esac
-done
-export PATH
-
-if [ -z "$NODE_BINARY" ]; then
-    if command -v node >/dev/null 2>&1
-    then
-        NODE_BINARY=$(command -v node)
-        export NODE_BINARY
-    fi
-fi
-
 CLASSPATH="\\\"\\\""
 
 

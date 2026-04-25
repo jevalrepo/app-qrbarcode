@@ -1,9 +1,15 @@
 import { Alert } from 'react-native';
-import Purchases from 'react-native-purchases';
-import RevenueCatUI from 'react-native-purchases-ui';
 import { RC_ENTITLEMENT } from '@/hooks/useRevenueCat';
 
+let Purchases: any = null;
+let RevenueCatUI: any = null;
+try {
+  Purchases = require('react-native-purchases').default;
+  RevenueCatUI = require('react-native-purchases-ui').default;
+} catch {}
+
 export async function presentPaywall(): Promise<void> {
+  if (!RevenueCatUI) return;
   try {
     await RevenueCatUI.presentPaywallIfNeeded({
       requiredEntitlementIdentifier: RC_ENTITLEMENT,
@@ -17,6 +23,7 @@ export async function restorePurchases(
   successMsg: string,
   notFoundMsg: string,
 ): Promise<void> {
+  if (!Purchases) return;
   try {
     const info = await Purchases.restorePurchases();
     const isPro = !!info.entitlements.active[RC_ENTITLEMENT];
@@ -27,6 +34,7 @@ export async function restorePurchases(
 }
 
 export async function presentCustomerCenter(): Promise<void> {
+  if (!RevenueCatUI) return;
   try {
     await RevenueCatUI.presentCustomerCenter();
   } catch (e) {
