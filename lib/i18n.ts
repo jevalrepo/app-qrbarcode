@@ -37,6 +37,7 @@ const es = {
     goPro: 'Hacerse PRO',
     close: 'Cerrar',
     adLoading: 'Cargando anuncio...',
+    adUnavailable: 'Anuncio no disponible sin conexión',
   },
   result: {
     title: 'Resultado',
@@ -206,6 +207,7 @@ const en: typeof es = {
     goPro: 'Go PRO',
     close: 'Close',
     adLoading: 'Loading ad...',
+    adUnavailable: 'Ad unavailable without connection',
   },
   result: {
     title: 'Result',

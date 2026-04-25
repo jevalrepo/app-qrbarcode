@@ -9,10 +9,12 @@ import { TurboModuleRegistry } from 'react-native';
 
 let RewardedInterstitialAd: any = null;
 let RewardedAdEventType: any = null;
+let AdEventType: any = null;
 if (!!TurboModuleRegistry.get('RNGoogleMobileAdsModule')) {
   const ads = require('react-native-google-mobile-ads');
   RewardedInterstitialAd = ads.RewardedInterstitialAd;
   RewardedAdEventType = ads.RewardedAdEventType;
+  AdEventType = ads.AdEventType;
 }
 
 interface Props {
@@ -29,6 +31,7 @@ export default function ScanLimitModal({ visible, onClose, onRewarded }: Props) 
   const accent = useAccent();
   const [adReady, setAdReady] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [adFailed, setAdFailed] = useState(false);
   const rewardedRef = useRef<any>(null);
 
   const bg = isDark ? '#141414' : '#FFFFFF';
@@ -41,6 +44,7 @@ export default function ScanLimitModal({ visible, onClose, onRewarded }: Props) 
     if (!visible || !RewardedInterstitialAd || !RewardedAdEventType) return;
 
     setAdReady(false);
+    setAdFailed(false);
     setLoading(true);
 
     const ad = RewardedInterstitialAd.createForAdRequest(AD_UNITS.rewardedInterstitial);
@@ -51,6 +55,13 @@ export default function ScanLimitModal({ visible, onClose, onRewarded }: Props) 
       setLoading(false);
     });
 
+    const unsubError = AdEventType
+      ? ad.addAdEventListener(AdEventType.ERROR, () => {
+          setAdFailed(true);
+          setLoading(false);
+        })
+      : () => {};
+
     const unsubReward = ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, async () => {
       await resetScanCount();
       onRewarded();
@@ -60,6 +71,7 @@ export default function ScanLimitModal({ visible, onClose, onRewarded }: Props) 
 
     return () => {
       unsubLoaded();
+      unsubError();
       unsubReward();
     };
   }, [visible]);
@@ -96,30 +108,39 @@ export default function ScanLimitModal({ visible, onClose, onRewarded }: Props) 
 
           {/* Buttons */}
           <View style={{ padding: 20, gap: 10 }}>
-            {/* Ver anuncio */}
-            <TouchableOpacity
-              onPress={() => rewardedRef.current?.show()}
-              disabled={!adReady}
-              activeOpacity={0.85}
-              style={{
-                backgroundColor: adReady ? accent : bgSecondary,
-                borderRadius: 18, paddingVertical: 16,
-                flexDirection: 'row', alignItems: 'center',
-                justifyContent: 'center', gap: 8,
-              }}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color={textSecondary} />
-              ) : (
-                <Ionicons name="play-circle" size={22} color={adReady ? 'white' : textSecondary} />
-              )}
-              <Text style={{
-                color: adReady ? 'white' : textSecondary,
-                fontWeight: '600', fontSize: 16,
-              }}>
-                {loading ? s.adLoading : s.watchAd}
-              </Text>
-            </TouchableOpacity>
+            {/* Ver anuncio — oculto si falló la carga */}
+            {!adFailed && (
+              <TouchableOpacity
+                onPress={() => rewardedRef.current?.show()}
+                disabled={!adReady}
+                activeOpacity={0.85}
+                style={{
+                  backgroundColor: adReady ? accent : bgSecondary,
+                  borderRadius: 18, paddingVertical: 16,
+                  flexDirection: 'row', alignItems: 'center',
+                  justifyContent: 'center', gap: 8,
+                }}
+              >
+                {loading ? (
+                  <ActivityIndicator size="small" color={textSecondary} />
+                ) : (
+                  <Ionicons name="play-circle" size={22} color={adReady ? 'white' : textSecondary} />
+                )}
+                <Text style={{
+                  color: adReady ? 'white' : textSecondary,
+                  fontWeight: '600', fontSize: 16,
+                }}>
+                  {loading ? s.adLoading : s.watchAd}
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {adFailed && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 4 }}>
+                <Ionicons name="cloud-offline-outline" size={15} color={textSecondary} />
+                <Text style={{ color: textSecondary, fontSize: 13 }}>{s.adUnavailable}</Text>
+              </View>
+            )}
 
             {/* Hacerse PRO */}
             <TouchableOpacity
