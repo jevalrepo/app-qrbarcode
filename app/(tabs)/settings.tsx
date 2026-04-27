@@ -357,7 +357,7 @@ export default function SettingsScreen() {
           <View className="h-px mx-4" style={{ backgroundColor: border }} />
           <View className="flex-row items-center justify-between px-4 py-4">
             <Text className="text-sm" style={{ color: text }}>
-              ScanCodi — QR & Barcode Scanner
+              ScanCodi — QR Scanner
             </Text>
           </View>
           <View className="h-px mx-4" style={{ backgroundColor: border }} />

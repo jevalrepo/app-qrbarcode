@@ -2,7 +2,7 @@ import { useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
 import { useAppSettings } from '@/context/SettingsContext';
 
-export const RC_ENTITLEMENT = 'QR & BARCODE SCANNER Pro';
+export const RC_ENTITLEMENT = 'ScanCodi — QR Scanner';
 
 const RC_API_KEY = Platform.select({
   ios: 'REPLACE_IOS_KEY_HERE',

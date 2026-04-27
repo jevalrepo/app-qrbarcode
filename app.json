@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "ScanCodi — QR & Barcode Scanner",
+    "name": "ScanCodi — QR Scanner",
     "slug": "qr-clean",
     "version": "1.0.0",
     "scheme": "qrclean",
@@ -16,7 +16,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.qrclean.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "QR & Barcode Scanner necesita acceso a la cámara para escanear códigos QR y de barras."
+        "NSCameraUsageDescription": "ScanCodi necesita acceso a la cámara para escanear códigos QR y de barras."
       }
     },
     "android": {
@@ -39,7 +39,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "QR & Barcode Scanner necesita acceso a la cámara para escanear códigos QR y de barras."
+          "cameraPermission": "ScanCodi necesita acceso a la cámara para escanear códigos QR y de barras."
         }
       ],
       [
@@ -52,13 +52,13 @@
       [
         "expo-contacts",
         {
-          "contactsPermission": "QR & Barcode Scanner necesita acceso a tus contactos para guardar información de vCard."
+          "contactsPermission": "ScanCodi necesita acceso a tus contactos para guardar información de vCard."
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "QR & Barcode Scanner necesita acceso a tus fotos para escanear códigos QR desde la galería."
+          "photosPermission": "ScanCodi necesita acceso a tus fotos para escanear códigos QR desde la galería."
         }
       ]
     ],
