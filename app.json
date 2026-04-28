@@ -5,10 +5,10 @@
     "version": "1.0.0",
     "scheme": "qrclean",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/ScanCodi Icon .png",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/ScanCodi Splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -22,7 +22,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#2C2D31"
       },
       "package": "com.qrclean.app",
       "permissions": [
