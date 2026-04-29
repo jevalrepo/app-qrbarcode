@@ -28,7 +28,7 @@ File-based routing via expo-router:
 - `app/(tabs)/` — bottom tab navigator: `index`, `history`, `generate`, `settings`
 - `app/scanner.tsx` — full-screen modal (camera)
 - `app/result.tsx` — slide-up modal showing scan result + actions
-- `app/help.tsx`, `app/privacy.tsx` — slide-up modals
+- `app/help.tsx` — slide-up modal
 
 ### Global State (`context/SettingsContext.tsx`)
 Single context persisted to AsyncStorage under key `qrclean_settings`. Exposes:
@@ -84,4 +84,3 @@ Two locales: `es` (default) and `en`. `en` is typed as `typeof es` — adding a 
 **Native module guards:** Modules like `react-native-google-mobile-ads` and `react-native-purchases` are guarded with `TurboModuleRegistry.get(...)` checks or try/catch before `require()` to avoid crashes when native layer isn't compiled yet.
 
 **Theme colors:** `isDark ? '#0A0A0A' : '#FFFFFF'` pattern is used consistently. Never hardcode colors without a dark/light pair.
-

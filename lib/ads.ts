@@ -1,8 +1,7 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Cambia a true solo cuando vayas a publicar en Play Store
-const USE_PRODUCTION_ADS = false;
+const USE_PRODUCTION_ADS = !__DEV__;
 
 const TEST_IDS = {
   banner: Platform.select({

@@ -52,14 +52,14 @@ export default function HistoryScreen() {
   const genFavorites = useMemo(() => generations.filter((g) => g.favorite), [generations]);
 
   const nonFavoriteScans = useMemo(() => {
-    if (isPro && scanFavorites.length > 0) return history.filter((i) => !i.favorite);
+    if (scanFavorites.length > 0) return history.filter((i) => !i.favorite);
     return history;
-  }, [history, isPro, scanFavorites]);
+  }, [history, scanFavorites]);
 
   const nonFavoriteGens = useMemo(() => {
-    if (isPro && genFavorites.length > 0) return generations.filter((g) => !g.favorite);
+    if (genFavorites.length > 0) return generations.filter((g) => !g.favorite);
     return generations;
-  }, [generations, isPro, genFavorites]);
+  }, [generations, genFavorites]);
 
   function confirmDeleteItem(id: string, isGeneration: boolean) {
     Alert.alert(h.confirmItemTitle, h.confirmItemMsg, [
@@ -93,7 +93,7 @@ export default function HistoryScreen() {
     label: string,
     onToggle: (id: string) => void,
   ) {
-    if (!isPro || items.length === 0) return null;
+    if (items.length === 0) return null;
     return (
       <View style={{ marginBottom: 20 }}>
         <Text style={{
@@ -197,7 +197,7 @@ export default function HistoryScreen() {
               <View style={{ borderRadius: 16, overflow: 'hidden', backgroundColor: bgSecondary, borderWidth: 0.5, borderColor: border }}>
                 <ScanResultCard
                   item={item}
-                  onToggleFavorite={isPro ? toggleFavorite : undefined}
+                  onToggleFavorite={toggleFavorite}
                   onDelete={(id) => confirmDeleteItem(id, false)}
                 />
               </View>
@@ -235,7 +235,7 @@ export default function HistoryScreen() {
               <View style={{ borderRadius: 16, overflow: 'hidden', backgroundColor: bgSecondary, borderWidth: 0.5, borderColor: border }}>
                 <ScanResultCard
                   item={item as HistoryItem}
-                  onToggleFavorite={isPro ? toggleGenerationFavorite : undefined}
+                  onToggleFavorite={toggleGenerationFavorite}
                   onDelete={(id) => confirmDeleteItem(id, true)}
                 />
               </View>

@@ -30,6 +30,7 @@ android/.cxx/
 # Signing keys (NEVER commitear)
 *.keystore
 *.jks
+android/key.properties
 android/app/debug.keystore
 
 # iOS

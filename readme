@@ -1,0 +1,8 @@
+
+
+
+
+
+Construir produccion:
+1. Cambiar Versión en android/app/build.grandle
+2. cd android && ./gradlew bundleRelease

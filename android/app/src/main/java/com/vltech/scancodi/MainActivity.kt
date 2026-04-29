@@ -1,4 +1,4 @@
-package com.qrclean.app
+package com.vltech.scancodi
 
 import android.os.Build
 import android.os.Bundle

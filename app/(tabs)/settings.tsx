@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Switch, TouchableOpacity, ScrollView } from "react-native";
+import * as Application from "expo-application";
+import { View, Text, Switch, TouchableOpacity, ScrollView, Linking } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -40,7 +40,6 @@ function SectionLabel({ children }: { children: string }) {
 }
 
 export default function SettingsScreen() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const scheme = useThemeScheme();
   const isDark = scheme === "dark";
@@ -351,7 +350,7 @@ export default function SettingsScreen() {
               {s.version}
             </Text>
             <Text className="text-sm" style={{ color: textSecondary }}>
-              1.0.0
+              {Application.nativeApplicationVersion ?? '—'}
             </Text>
           </View>
           <View className="h-px mx-4" style={{ backgroundColor: border }} />
@@ -362,7 +361,7 @@ export default function SettingsScreen() {
           </View>
           <View className="h-px mx-4" style={{ backgroundColor: border }} />
           <TouchableOpacity
-            onPress={() => router.push("/privacy")}
+            onPress={() => Linking.openURL("https://vltech.mx/legal/privacidad/scancodi-qr-scanner.html")}
             className="flex-row items-center justify-between px-4 py-4"
             activeOpacity={0.7}
           >

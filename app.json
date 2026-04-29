@@ -2,7 +2,7 @@
   "expo": {
     "name": "ScanCodi — QR Scanner",
     "slug": "qr-clean",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "scheme": "qrclean",
     "orientation": "portrait",
     "icon": "./assets/ScanCodi Icon .png",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.qrclean.app",
+      "bundleIdentifier": "com.vltech.scancodi",
       "infoPlist": {
         "NSCameraUsageDescription": "ScanCodi necesita acceso a la cámara para escanear códigos QR y de barras."
       }
@@ -24,10 +24,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#2C2D31"
       },
-      "package": "com.qrclean.app",
-      "permissions": [
-        "android.permission.CAMERA"
-      ]
+      "package": "com.vltech.scancodi",
+      "permissions": ["android.permission.CAMERA"]
     },
     "web": {
       "bundler": "metro",
