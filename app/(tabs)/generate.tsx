@@ -3,6 +3,7 @@ import BannerAdView from '@/components/BannerAdView';
 import {
   View, Text, TouchableOpacity, TextInput, ScrollView, Alert, Platform, Modal,
 } from 'react-native';
+import { captureRef } from 'react-native-view-shot';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
@@ -28,6 +29,8 @@ const TYPE_ICONS: Record<QRGenerateType, keyof typeof Ionicons.glyphMap> = {
   vcard: 'person-outline',
 };
 
+type WifiSecurity = 'WPA' | 'WEP' | 'nopass';
+
 function buildQRData(
   type: QRGenerateType,
   value: string,
@@ -35,9 +38,13 @@ function buildQRData(
   vcardPhone: string,
   vcardEmail: string,
   vcardOrg: string,
+  wifiSecurity: WifiSecurity = 'WPA',
 ): string {
   switch (type) {
-    case 'wifi': return `WIFI:T:WPA;S:${value};P:${wifiPass};;`;
+    case 'wifi':
+      return wifiSecurity === 'nopass'
+        ? `WIFI:T:;S:${value};;;`
+        : `WIFI:T:${wifiSecurity};S:${value};P:${wifiPass};;`;
     case 'email': return value.includes('@') ? `mailto:${value}` : value;
     case 'phone': return `tel:${value}`;
     case 'url': return value.startsWith('http') ? value : `https://${value}`;
@@ -59,11 +66,12 @@ function buildQRData(
 
 function InputField({
   label, value, onChange, placeholder, isDark, text, textSecondary, bgTertiary,
-  keyboardType, secureTextEntry,
+  keyboardType, secureTextEntry, multiline,
 }: {
   label: string; value: string; onChange: (v: string) => void; placeholder: string;
   isDark: boolean; text: string; textSecondary: string; bgTertiary: string;
   keyboardType?: 'default' | 'email-address' | 'phone-pad'; secureTextEntry?: boolean;
+  multiline?: boolean;
 }) {
   return (
     <View className="rounded-2xl mb-3 overflow-hidden" style={{ backgroundColor: bgTertiary }}>
@@ -77,6 +85,8 @@ function InputField({
         placeholderTextColor={isDark ? '#4A4A45' : '#BBBBB6'}
         style={{
           color: text, fontSize: 16, paddingHorizontal: 16, paddingTop: 4, paddingBottom: 16,
+          minHeight: multiline ? 120 : undefined,
+          textAlignVertical: multiline ? 'top' : 'center',
           // @ts-ignore
           outline: 'none',
         }}
@@ -85,6 +95,8 @@ function InputField({
         underlineColorAndroid="transparent"
         keyboardType={keyboardType ?? 'default'}
         secureTextEntry={secureTextEntry}
+        multiline={multiline}
+        blurOnSubmit={!multiline}
       />
     </View>
   );
@@ -96,20 +108,22 @@ export default function GenerateScreen() {
   const isDark = scheme === 'dark';
   const t = useT();
   const g = t.generate;
+  const r = t.result;
   const accent = useAccent();
 
   const { addToGenerationHistory } = useGenerationHistory();
   const [activeType, setActiveType] = useState<QRGenerateType>('url');
   const [value, setValue] = useState('');
   const [wifiPass, setWifiPass] = useState('');
+  const [wifiSecurity, setWifiSecurity] = useState<WifiSecurity>('WPA');
   const [vcardPhone, setVcardPhone] = useState('');
   const [vcardEmail, setVcardEmail] = useState('');
   const [vcardOrg, setVcardOrg] = useState('');
   const [generated, setGenerated] = useState<string | null>(null);
   const [previewVisible, setPreviewVisible] = useState(false);
-  const [imageCopied, setImageCopied] = useState(false);
   const [imageSaved, setImageSaved] = useState(false);
   const svgRef = useRef<{ toDataURL: (cb: (data: string) => void) => void } | null>(null);
+  const shareFrameRef = useRef<View>(null);
 
   const bg = isDark ? '#0A0A0A' : '#FFFFFF';
   const bgSecondary = isDark ? '#141414' : '#F5F5F3';
@@ -120,6 +134,17 @@ export default function GenerateScreen() {
   const overlay = isDark ? 'rgba(10,10,10,0.72)' : 'rgba(10,10,10,0.24)';
   const canGenerate = value.trim().length > 0;
   const activeDescription = g.descriptions[activeType];
+
+  function closeAndReset() {
+    setPreviewVisible(false);
+    setValue('');
+    setWifiPass('');
+    setWifiSecurity('WPA');
+    setVcardPhone('');
+    setVcardEmail('');
+    setVcardOrg('');
+    setGenerated(null);
+  }
 
   function downloadWebPng(base64: string) {
     if (typeof document === 'undefined') return;
@@ -132,69 +157,61 @@ export default function GenerateScreen() {
   }
 
   async function handleSaveToGallery() {
-    if (!svgRef.current || !generated || !MediaLibrary) return;
-    svgRef.current.toDataURL(async (base64: string) => {
-      try {
-        const { status } = await MediaLibrary.requestPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('Error', g.saveError);
-          return;
-        }
-        const path = `${FileSystem.cacheDirectory}qr-barcode-scanner_${Date.now()}.png`;
-        await FileSystem.writeAsStringAsync(path, base64, { encoding: FileSystem.EncodingType.Base64 });
-        await MediaLibrary.saveToLibraryAsync(path);
-        setImageSaved(true);
-        setTimeout(() => setImageSaved(false), 1800);
-      } catch {
-        Alert.alert('Error', g.saveError);
-      }
-    });
+    if (!generated || !MediaLibrary || !shareFrameRef.current) return;
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') { Alert.alert('Error', g.saveError); return; }
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const uri = await captureRef(shareFrameRef, { format: 'png', quality: 1 });
+      await MediaLibrary.saveToLibraryAsync(uri);
+      setImageSaved(true);
+      setTimeout(() => setImageSaved(false), 1800);
+    } catch (e) {
+      console.error('[SaveToGallery]', e);
+      Alert.alert('Error', g.saveError);
+    }
   }
 
   async function handleShare() {
-    if (!svgRef.current || !generated) return;
-    svgRef.current.toDataURL(async (base64: string) => {
-      try {
-        if (Platform.OS === 'web') { downloadWebPng(base64); return; }
-        const path = `${FileSystem.cacheDirectory}qr-barcode-scanner_${Date.now()}.png`;
-        await FileSystem.writeAsStringAsync(path, base64, { encoding: FileSystem.EncodingType.Base64 });
-        await Sharing.shareAsync(path, { mimeType: 'image/png', UTI: 'public.png' });
-      } catch {
-        Alert.alert('Error', g.shareError);
-      }
-    });
-  }
-
-  async function handleCopyImage() {
-    if (!svgRef.current || !generated) return;
-    svgRef.current.toDataURL(async (base64: string) => {
-      try {
-        await Clipboard.setImageAsync(base64);
-        setImageCopied(true);
-        setTimeout(() => setImageCopied(false), 1800);
-      } catch {
-        Alert.alert('Error', g.imageCopyError);
-      }
-    });
+    if (!generated) return;
+    if (Platform.OS === 'web') {
+      svgRef.current?.toDataURL((base64: string) => downloadWebPng(base64));
+      return;
+    }
+    if (!shareFrameRef.current) return;
+    try {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const uri = await captureRef(shareFrameRef, { format: 'png', quality: 1 });
+      await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png' });
+    } catch (e) {
+      console.error('[ShareImage]', e);
+      Alert.alert('Error', g.shareError);
+    }
   }
 
   function handleTypeChange(type: QRGenerateType) {
     setActiveType(type);
     setValue('');
     setWifiPass('');
+    setWifiSecurity('WPA');
     setVcardPhone('');
     setVcardEmail('');
     setVcardOrg('');
     setGenerated(null);
     setPreviewVisible(false);
-    setImageCopied(false);
   }
 
   function handleGenerate() {
-    const next = buildQRData(activeType, value.trim(), wifiPass.trim(), vcardPhone.trim(), vcardEmail.trim(), vcardOrg.trim());
+    if (activeType === 'phone') {
+      const digits = value.replace(/\D/g, '');
+      if (digits.length < 7) {
+        Alert.alert('', g.phoneInvalid);
+        return;
+      }
+    }
+    const next = buildQRData(activeType, value.trim(), wifiPass.trim(), vcardPhone.trim(), vcardEmail.trim(), vcardOrg.trim(), wifiSecurity);
     setGenerated(next);
     setPreviewVisible(true);
-    setImageCopied(false);
     addToGenerationHistory({ data: next, type: activeType as QRType });
   }
 
@@ -266,18 +283,49 @@ export default function GenerateScreen() {
             placeholder={placeholderMap[activeType]}
             isDark={isDark} text={text} textSecondary={textSecondary} bgTertiary={bgTertiary}
             keyboardType={activeType === 'phone' ? 'phone-pad' : activeType === 'email' ? 'email-address' : 'default'}
+            multiline={activeType === 'text'}
           />
 
-          {/* wifi password */}
+          {/* wifi security + password */}
           {activeType === 'wifi' && (
-            <InputField
-              label={g.labels.password}
-              value={wifiPass}
-              onChange={(v) => { setWifiPass(v); setGenerated(null); }}
-              placeholder={g.placeholders.password}
-              isDark={isDark} text={text} textSecondary={textSecondary} bgTertiary={bgTertiary}
-              secureTextEntry
-            />
+            <>
+              <View className="rounded-2xl mb-3 overflow-hidden" style={{ backgroundColor: bgTertiary }}>
+                <Text className="text-xs font-semibold tracking-widest px-4 pt-3 pb-2" style={{ color: textSecondary }}>
+                  {g.labels.wifiSecurity}
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingBottom: 12 }}>
+                  {(['WPA', 'WEP', 'nopass'] as WifiSecurity[]).map((opt) => {
+                    const active = wifiSecurity === opt;
+                    const label = opt === 'nopass' ? g.labels.wifiSecurityNone : opt;
+                    return (
+                      <TouchableOpacity
+                        key={opt}
+                        onPress={() => { setWifiSecurity(opt); setGenerated(null); }}
+                        style={{
+                          flex: 1, paddingVertical: 8, borderRadius: 10, alignItems: 'center',
+                          backgroundColor: active ? accent : (isDark ? '#2A2A2A' : '#DDDDD8'),
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={{ fontSize: 13, fontWeight: '500', color: active ? 'white' : textSecondary }}>
+                          {label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+              {wifiSecurity !== 'nopass' && (
+                <InputField
+                  label={g.labels.password}
+                  value={wifiPass}
+                  onChange={(v) => { setWifiPass(v); setGenerated(null); }}
+                  placeholder={g.placeholders.password}
+                  isDark={isDark} text={text} textSecondary={textSecondary} bgTertiary={bgTertiary}
+                  secureTextEntry
+                />
+              )}
+            </>
           )}
 
           {/* vcard extra fields */}
@@ -323,11 +371,41 @@ export default function GenerateScreen() {
         </View>
       </View>
 
+      {/* Frame oculto fuera de pantalla capturado al compartir */}
+      {!!generated && (
+        <View
+          ref={shareFrameRef}
+          collapsable={false}
+          style={{
+            position: 'absolute',
+            top: -5000,
+            left: 0,
+            backgroundColor: 'white',
+            padding: 24,
+            paddingBottom: 20,
+            alignItems: 'center',
+          }}
+        >
+          <QRCode
+            value={generated}
+            size={220}
+            backgroundColor="white"
+            color="#0A0A0A"
+            quietZone={16}
+          />
+          <Text style={{ marginTop: 16, fontSize: 13, fontWeight: '500', letterSpacing: 0.3 }}>
+            <Text style={{ color: '#0A0A0A' }}>{r.generatedIn}</Text>
+            <Text style={{ color: '#0A0A0A' }}>Scan</Text>
+            <Text style={{ color: '#17D124' }}>Codi</Text>
+          </Text>
+        </View>
+      )}
+
       <Modal
         visible={previewVisible && !!generated}
         transparent
         animationType="fade"
-        onRequestClose={() => setPreviewVisible(false)}
+        onRequestClose={closeAndReset}
       >
         <View className="flex-1 items-center justify-center px-5" style={{ backgroundColor: overlay }}>
           <View
@@ -336,7 +414,7 @@ export default function GenerateScreen() {
           >
             <View className="flex-row items-center justify-end mb-4">
               <TouchableOpacity
-                onPress={() => setPreviewVisible(false)}
+                onPress={closeAndReset}
                 className="w-10 h-10 rounded-full items-center justify-center"
                 style={{ backgroundColor: bgTertiary }}
               >
@@ -344,9 +422,8 @@ export default function GenerateScreen() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity onLongPress={handleCopyImage} activeOpacity={1} delayLongPress={220} className="self-center">
-              <View className="rounded-[24px] bg-white p-4 items-center self-center">
-                <QRCode
+            <View className="rounded-[24px] bg-white p-4 items-center self-center">
+              <QRCode
                   value={generated ?? ''}
                   size={220}
                   backgroundColor="white"
@@ -354,20 +431,12 @@ export default function GenerateScreen() {
                   quietZone={16}
                   getRef={(ref) => { svgRef.current = ref as typeof svgRef.current; }}
                 />
-              </View>
-            </TouchableOpacity>
-
-            <Text className="text-xs text-center mt-4" style={{ color: imageCopied ? accent : textSecondary }}>
-              {imageCopied ? g.imageCopied : g.holdToCopy}
-            </Text>
-            <Text className="text-xs text-center mt-3 mb-4" numberOfLines={2} style={{ color: textSecondary }}>
-              {generated}
-            </Text>
+            </View>
 
             <TouchableOpacity
               onPress={handleShare}
               className="rounded-2xl py-4 flex-row items-center justify-center gap-2 mb-2"
-              style={{ backgroundColor: accent }}
+              style={{ backgroundColor: accent, marginTop: 20 }}
               activeOpacity={0.85}
             >
               <Ionicons name="share-outline" size={18} color="white" />
@@ -394,14 +463,6 @@ export default function GenerateScreen() {
               </TouchableOpacity>
             )}
 
-            <TouchableOpacity
-              onPress={() => setPreviewVisible(false)}
-              className="rounded-2xl py-4 items-center"
-              style={{ backgroundColor: bgTertiary }}
-              activeOpacity={0.75}
-            >
-              <Text className="font-medium text-base" style={{ color: textSecondary }}>{t.scanner.cancel}</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </Modal>

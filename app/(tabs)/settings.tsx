@@ -295,6 +295,26 @@ export default function SettingsScreen() {
           <View className="flex-row items-center px-4 py-4">
             <View className="flex-1 mr-4">
               <Text className="text-sm font-medium" style={{ color: text }}>
+                {s.autoOpenScanner}
+              </Text>
+              <Text className="text-xs mt-0.5" style={{ color: textSecondary }}>
+                {s.autoOpenScannerDesc}
+              </Text>
+            </View>
+            <Switch
+              value={settings.autoOpenScanner}
+              onValueChange={(val) => updateSettings({ autoOpenScanner: val })}
+              trackColor={{
+                false: isDark ? "#2A2A2A" : "#EBEBEA",
+                true: accent,
+              }}
+              thumbColor="white"
+            />
+          </View>
+          <View className="h-px mx-4" style={{ backgroundColor: border }} />
+          <View className="flex-row items-center px-4 py-4">
+            <View className="flex-1 mr-4">
+              <Text className="text-sm font-medium" style={{ color: text }}>
                 {s.autoOpen}
               </Text>
               <Text className="text-xs mt-0.5" style={{ color: textSecondary }}>

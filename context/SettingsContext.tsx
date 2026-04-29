@@ -9,6 +9,7 @@ export type ThemePreference = 'light' | 'dark' | 'auto';
 export interface Settings {
   theme: ThemePreference;
   autoOpenUrls: boolean;
+  autoOpenScanner: boolean;
   haptics: boolean;
   language: Language;
   accentColor: string;
@@ -18,6 +19,7 @@ export interface Settings {
 const DEFAULT: Settings = {
   theme: 'auto',
   autoOpenUrls: false,
+  autoOpenScanner: false,
   haptics: true,
   language: 'es',
   accentColor: DEFAULT_ACCENT,
@@ -31,7 +33,8 @@ const SettingsContext = createContext<{
   settings: Settings;
   resolvedTheme: 'light' | 'dark';
   updateSettings: (partial: Partial<Settings>) => void;
-}>({ settings: DEFAULT, resolvedTheme: FALLBACK_THEME, updateSettings: () => {} });
+  settingsLoaded: boolean;
+}>({ settings: DEFAULT, resolvedTheme: FALLBACK_THEME, updateSettings: () => {}, settingsLoaded: false });
 
 function getSystemTheme() {
   return Appearance.getColorScheme() ?? FALLBACK_THEME;
@@ -63,12 +66,15 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(
     resolveTheme(DEFAULT.theme, getSystemTheme()),
   );
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
-      if (!raw) return;
-      const saved: Settings = { ...DEFAULT, ...JSON.parse(raw) };
-      setSettings(saved);
+      if (raw) {
+        const saved: Settings = { ...DEFAULT, ...JSON.parse(raw) };
+        setSettings(saved);
+      }
+      setSettingsLoaded(true);
     });
   }, []);
 
@@ -93,7 +99,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <SettingsContext.Provider value={{ settings, resolvedTheme, updateSettings }}>
+    <SettingsContext.Provider value={{ settings, resolvedTheme, updateSettings, settingsLoaded }}>
       {children}
     </SettingsContext.Provider>
   );

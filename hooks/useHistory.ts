@@ -12,6 +12,7 @@ export interface HistoryItem {
   type: QRType;
   scannedAt: number;
   favorite?: boolean;
+  alias?: string;
 }
 
 export function useHistory() {
@@ -70,6 +71,16 @@ export function useHistory() {
     });
   }, []);
 
+  const renameItem = useCallback(async (id: string, alias: string) => {
+    setHistory((prev) => {
+      const next = prev.map((h) =>
+        h.id === id ? { ...h, alias: alias.trim() || undefined } : h,
+      );
+      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   // clearHistory preserves favorites
   const clearHistory = useCallback(async () => {
     setHistory((prev) => {
@@ -84,5 +95,5 @@ export function useHistory() {
     setHistory(raw ? JSON.parse(raw) : []);
   }, []);
 
-  return { history, loading, addToHistory, removeFromHistory, toggleFavorite, clearHistory, reload };
+  return { history, loading, addToHistory, removeFromHistory, toggleFavorite, renameItem, clearHistory, reload };
 }

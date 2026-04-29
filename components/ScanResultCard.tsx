@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
 import { useRouter } from 'expo-router';
 import { HistoryItem } from '@/hooks/useHistory';
-import { getTypeLabel, getTypeIcon, getTypeColor } from '@/lib/detectType';
+import { getTypeLabel, getTypeIcon, getTypeColor, parseWifi } from '@/lib/detectType';
 import { useAccent, useThemeScheme } from '@/context/SettingsContext';
 
 interface Props {
@@ -13,6 +13,7 @@ interface Props {
   showDivider?: boolean;
   onToggleFavorite?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onRename?: (id: string) => void;
 }
 
 function timeAgo(ms: number): string {
@@ -25,7 +26,7 @@ function timeAgo(ms: number): string {
   return `${Math.floor(hrs / 24)}d`;
 }
 
-export default function ScanResultCard({ item, compact = false, showDivider = false, onToggleFavorite, onDelete }: Props) {
+export default function ScanResultCard({ item, compact = false, showDivider = false, onToggleFavorite, onDelete, onRename }: Props) {
   const router = useRouter();
   const scheme = useThemeScheme();
   const isDark = scheme === 'dark';
@@ -38,7 +39,7 @@ export default function ScanResultCard({ item, compact = false, showDivider = fa
   return (
     <>
       <TouchableOpacity
-        onPress={() => router.push({ pathname: '/result', params: { data: item.data, type: item.type } })}
+        onPress={() => router.push({ pathname: '/result', params: { data: item.data, type: item.type, source: 'history' } })}
         activeOpacity={0.7}
         style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: compact ? 12 : 14 }}
       >
@@ -48,7 +49,11 @@ export default function ScanResultCard({ item, compact = false, showDivider = fa
 
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text numberOfLines={1} style={{ fontSize: 14, fontWeight: '500', color: isDark ? '#F5F5F3' : '#0A0A0A' }}>
-            {item.data}
+            {item.alias ?? (
+              item.type === 'wifi' ? parseWifi(item.data).ssid
+              : item.type === 'vcard' ? (item.data.match(/FN:([^\r\n]+)/i)?.[1]?.trim() ?? item.data)
+              : item.data
+            )}
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2, gap: 6 }}>
             <Text style={{ fontSize: 12, fontWeight: '500', color }}>{label}</Text>
@@ -68,6 +73,15 @@ export default function ScanResultCard({ item, compact = false, showDivider = fa
                 size={16}
                 color={item.favorite ? '#EF9F27' : subtleColor}
               />
+            </TouchableOpacity>
+          )}
+          {item.favorite && onRename && (
+            <TouchableOpacity
+              onPress={(e) => { e.stopPropagation(); onRename(item.id); }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              style={{ padding: 4 }}
+            >
+              <Ionicons name="pencil-outline" size={15} color={subtleColor} />
             </TouchableOpacity>
           )}
           {onDelete ? (

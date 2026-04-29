@@ -11,6 +11,7 @@ export interface GenerationItem {
   type: QRType;
   scannedAt: number;
   favorite?: boolean;
+  alias?: string;
 }
 
 export function useGenerationHistory() {
@@ -64,6 +65,16 @@ export function useGenerationHistory() {
     });
   }, []);
 
+  const renameGenerationItem = useCallback(async (id: string, alias: string) => {
+    setGenerations((prev) => {
+      const next = prev.map((g) =>
+        g.id === id ? { ...g, alias: alias.trim() || undefined } : g,
+      );
+      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const clearGenerationHistory = useCallback(async () => {
     setGenerations((prev) => {
       const kept = prev.filter((g) => g.favorite);
@@ -83,6 +94,7 @@ export function useGenerationHistory() {
     addToGenerationHistory,
     removeFromGenerationHistory,
     toggleGenerationFavorite,
+    renameGenerationItem,
     clearGenerationHistory,
     reload,
   };

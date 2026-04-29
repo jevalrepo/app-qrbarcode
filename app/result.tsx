@@ -1,29 +1,42 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  View, Text, TouchableOpacity, ScrollView, Linking, Alert, Share,
+  View, Text, TouchableOpacity, ScrollView, Linking, Alert, TurboModuleRegistry, Platform,
 } from 'react-native';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as IntentLauncher from 'expo-intent-launcher';
+
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
-import * as Contacts from 'expo-contacts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppSettings, useT, useAccent, useThemeScheme } from '@/context/SettingsContext';
 import { QRType, getTypeLabel, getTypeIcon, getTypeColor, parseWifi } from '@/lib/detectType';
+import { AD_UNITS } from '@/lib/ads';
+
+const adsAvailable = !!TurboModuleRegistry.get('RNGoogleMobileAdsModule');
+let BannerAd: any = null;
+let BannerAdSize: any = null;
+if (adsAvailable) {
+  const ads = require('react-native-google-mobile-ads');
+  BannerAd = ads.BannerAd;
+  BannerAdSize = ads.BannerAdSize;
+}
 
 export default function ResultScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { data, type } = useLocalSearchParams<{ data: string; type: string }>();
+  const { data, type, source } = useLocalSearchParams<{ data: string; type: string; source?: string }>();
   const scheme = useThemeScheme();
   const isDark = scheme === 'dark';
   const [copied, setCopied] = useState(false);
-  const [imageCopied, setImageCopied] = useState(false);
   const svgRef = useRef<{ toDataURL: (cb: (data: string) => void) => void } | null>(null);
+  const shareFrameRef = useRef<View>(null);
   const { settings } = useAppSettings();
   const t = useT();
   const r = t.result;
-  const g = t.generate;
   const accent = useAccent();
 
   const qrType = (type as QRType) ?? 'text';
@@ -32,7 +45,7 @@ export default function ResultScreen() {
   const label = getTypeLabel(qrType);
 
   useEffect(() => {
-    if (settings.autoOpenUrls && qrType === 'url' && data) {
+    if (settings.autoOpenUrls && qrType === 'url' && data && source !== 'history') {
       Linking.openURL(data.startsWith('http') ? data : `https://${data}`).catch(() => {});
     }
   }, []);
@@ -43,57 +56,41 @@ export default function ResultScreen() {
   const text = isDark ? '#F5F5F3' : '#0A0A0A';
   const textSecondary = '#888780';
 
-  function handleCopyImage() {
-    if (!svgRef.current) return;
-    svgRef.current.toDataURL(async (base64: string) => {
-      try {
-        await Clipboard.setImageAsync(base64);
-        setImageCopied(true);
-        setTimeout(() => setImageCopied(false), 1800);
-      } catch {
-        Alert.alert('Error', g.imageCopyError);
-      }
-    });
-  }
-
   async function handleCopy() {
     await Clipboard.setStringAsync(data ?? '');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
-  async function handleShare() {
+  async function handleShareImage() {
+    if (!shareFrameRef.current) return;
     try {
-      await Share.share({ message: data ?? '' });
-    } catch {}
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const uri = await captureRef(shareFrameRef, { format: 'png', quality: 1 });
+      await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png' });
+    } catch (e) {
+      console.error('[ShareImage]', e);
+      Alert.alert('Error', r.shareError ?? '');
+    }
   }
 
   async function handleAddContact() {
     if (!data) return;
-    const { status } = await Contacts.requestPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('', r.contactError);
-      return;
-    }
     try {
-      const name = data.match(/FN:([^\r\n]+)/i)?.[1]?.trim() ?? '';
-      const phone = data.match(/TEL[^:]*:([^\r\n]+)/i)?.[1]?.trim();
-      const email = data.match(/EMAIL[^:]*:([^\r\n]+)/i)?.[1]?.trim();
-      const org = data.match(/ORG:([^\r\n]+)/i)?.[1]?.trim();
-
-      const contact: Contacts.Contact = {
-        contactType: Contacts.ContactTypes.Person,
-        name,
-        firstName: name.split(' ')[0] ?? name,
-        lastName: name.split(' ').slice(1).join(' ') || undefined,
-        phoneNumbers: phone ? [{ label: 'mobile', number: phone }] : undefined,
-        emails: email ? [{ label: 'work', email }] : undefined,
-        company: org,
-      };
-
-      await Contacts.addContactAsync(contact);
-      Alert.alert('', r.contactSaved);
-    } catch {
+      const path = `${FileSystem.cacheDirectory}contact_${Date.now()}.vcf`;
+      await FileSystem.writeAsStringAsync(path, data);
+      if (Platform.OS === 'android') {
+        const contentUri = await FileSystem.getContentUriAsync(path);
+        await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+          data: contentUri,
+          type: 'text/vcard',
+          flags: 1,
+        });
+      } else {
+        await Sharing.shareAsync(path, { mimeType: 'text/vcard', UTI: 'public.vcard' });
+      }
+    } catch (e) {
+      console.error('[AddContact]', e);
       Alert.alert('', r.contactError);
     }
   }
@@ -111,9 +108,13 @@ export default function ResultScreen() {
         await Linking.openURL(`tel:${data.replace(/^tel:/i, '')}`);
         break;
       case 'wifi': {
-        const { ssid, password } = parseWifi(data);
-        Alert.alert(r.wifiTitle, `SSID: ${ssid}\n${r.copyPassword.replace('Copiar', '').trim()}: ${password}`, [
-          { text: r.copyPassword, onPress: () => Clipboard.setStringAsync(password) },
+        const { ssid, password, security } = parseWifi(data);
+        const secLabel = security === 'WPA' ? r.wifiSecurityWPA
+          : security === 'WEP' ? r.wifiSecurityWEP
+          : r.wifiOpen;
+        const msg = `${r.wifiSsid}: ${ssid}\n${r.wifiSecurityLabel}: ${secLabel}${password ? `\n${r.copyPassword.replace(/copiar\s*/i, '').replace(/copy\s*/i, '').trim()}: ${password}` : ''}`;
+        Alert.alert(r.wifiTitle, msg, [
+          ...(password ? [{ text: r.copyPassword, onPress: () => Clipboard.setStringAsync(password) }] : []),
           { text: 'OK' },
         ]);
         break;
@@ -189,7 +190,7 @@ export default function ResultScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 20 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 20 }}
         showsVerticalScrollIndicator={false}
       >
         <View className="flex-row items-center mb-4 gap-2">
@@ -202,19 +203,35 @@ export default function ResultScreen() {
           <Text className="text-sm font-medium" style={{ color }}>{label}</Text>
         </View>
 
-        {/* QR oculto con fondo blanco, usado exclusivamente para copiar al clipboard */}
-        <View style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}>
+        {/* Frame capturado al compartir — posicionado fuera de pantalla */}
+        <View
+          ref={shareFrameRef}
+          collapsable={false}
+          style={{
+            position: 'absolute',
+            top: -5000,
+            left: 0,
+            backgroundColor: 'white',
+            padding: 24,
+            paddingBottom: 20,
+            alignItems: 'center',
+          }}
+        >
           <QRCode
             value={data || ' '}
-            size={180}
+            size={220}
             backgroundColor="white"
             color="#0A0A0A"
-            getRef={(ref) => { svgRef.current = ref as typeof svgRef.current; }}
           />
+          <Text style={{ marginTop: 16, fontSize: 13, fontWeight: '500', letterSpacing: 0.3 }}>
+            <Text style={{ color: '#0A0A0A' }}>{r.generatedIn}</Text>
+            <Text style={{ color: '#0A0A0A' }}>Scan</Text>
+            <Text style={{ color: '#17D124' }}>Codi</Text>
+          </Text>
         </View>
 
         <TouchableOpacity
-          onLongPress={handleCopyImage}
+          onLongPress={handleShareImage}
           delayLongPress={220}
           activeOpacity={1}
           className="rounded-2xl p-5 mb-1 items-center"
@@ -227,17 +244,18 @@ export default function ResultScreen() {
             color={isDark ? '#F5F5F3' : '#0A0A0A'}
           />
         </TouchableOpacity>
-        <Text className="text-xs text-center mb-4" style={{ color: imageCopied ? accent : textSecondary }}>
-          {imageCopied ? g.imageCopied : g.holdToCopy}
+        <Text className="text-xs text-center mb-4" style={{ color: textSecondary }}>
+          {r.holdToShare}
         </Text>
 
-        <View
+        {qrType !== 'wifi' && <View
           className="rounded-2xl p-4 mb-4"
-          style={{ backgroundColor: bgSecondary, borderWidth: 0.5, borderColor: border }}
+          style={{ backgroundColor: bgSecondary, borderWidth: 0.5, borderColor: border, flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}
         >
           <Text
             selectable
             style={{
+              flex: 1,
               color: text,
               fontFamily: qrType === 'url' ? 'Courier' : undefined,
               fontSize: qrType === 'url' ? 13 : 15,
@@ -246,11 +264,18 @@ export default function ResultScreen() {
           >
             {data}
           </Text>
-        </View>
+          <TouchableOpacity onPress={handleCopy} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons
+              name={copied ? 'checkmark-outline' : 'copy-outline'}
+              size={18}
+              color={copied ? '#00C896' : textSecondary}
+            />
+          </TouchableOpacity>
+        </View>}
 
         <TouchableOpacity
           onPress={handleSmartAction}
-          className="rounded-2xl py-4 flex-row items-center justify-center gap-2 mb-3"
+          className="rounded-2xl py-4 flex-row items-center justify-center gap-2 mb-6"
           style={{ backgroundColor: color }}
           activeOpacity={0.85}
         >
@@ -258,33 +283,16 @@ export default function ResultScreen() {
           <Text className="text-white font-medium text-base">{getSmartActionLabel()}</Text>
         </TouchableOpacity>
 
-        {getSmartActionLabel() !== r.copy && (
-          <TouchableOpacity
-            onPress={handleCopy}
-            className="rounded-2xl py-4 flex-row items-center justify-center gap-2 mb-3"
-            style={{ backgroundColor: bgSecondary, borderWidth: 0.5, borderColor: border }}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name={copied ? 'checkmark-outline' : 'copy-outline'}
-              size={18}
-              color={copied ? '#00C896' : textSecondary}
+        {BannerAd && BannerAdSize && !settings.isPro && (
+          <View style={{ alignItems: 'center' }}>
+            <BannerAd
+              unitId={AD_UNITS.banner}
+              size={BannerAdSize.MEDIUM_RECTANGLE}
+              requestOptions={{ requestNonPersonalizedAdsOnly: false }}
             />
-            <Text className="font-medium text-base" style={{ color: copied ? '#00C896' : textSecondary }}>
-              {copied ? r.copied : r.copy}
-            </Text>
-          </TouchableOpacity>
+          </View>
         )}
 
-        <TouchableOpacity
-          onPress={handleShare}
-          className="rounded-2xl py-4 flex-row items-center justify-center gap-2"
-          style={{ backgroundColor: bgSecondary, borderWidth: 0.5, borderColor: border }}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="share-outline" size={18} color={textSecondary} />
-          <Text className="font-medium text-base" style={{ color: textSecondary }}>{r.share}</Text>
-        </TouchableOpacity>
       </ScrollView>
     </View>
   );
