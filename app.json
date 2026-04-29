@@ -5,13 +5,8 @@
     "version": "1.0.2",
     "scheme": "qrclean",
     "orientation": "portrait",
-    "icon": "./assets/ScanCodi Icon .png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/ScanCodi Splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.vltech.scancodi",
